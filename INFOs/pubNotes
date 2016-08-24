@@ -1,0 +1,4 @@
+1. Note sure if my NIC is handling the wep ICV properly
+    a) len() anything openICMP[N][LLC] where N is 0-3: 96
+    b) len() anything wepICMP[N][Dot11WEP].wepdata where N is 0-3: 96
+    - For a, the len should be 100

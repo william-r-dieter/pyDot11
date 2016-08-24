@@ -1,0 +1,86 @@
+#!/usr/bin/python2.7
+
+import logging, sys
+logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
+from rc4 import rc4
+from lib.crypto import Wep
+from scapy.all import *
+
+crypto = Wep()
+keyText = '0123456789'
+wepICMP = rdpcap('PCAPs/wep_pings.pcap')
+openICMP = rdpcap('PCAPs/open_pings.pcap')
+
+def wepDecrypt(pkt, keyText = keyText, method = 'pcap'):
+    """Encompasses the steps needed to decrypt a WEP packet"""
+    if method == 'pcap':
+        pkt = pkt.copy()
+    fullStream, stream, iVal, seed = crypto.decoder(pkt, keyText)
+    decodedPacket = crypto.deBuilder(pkt, fullStream)
+
+    ## Flip FCField bits accordingly
+    if decodedPacket[Dot11].FCfield == 65L:
+        decodedPacket[Dot11].FCfield = 1L
+    elif decodedPacket[Dot11].FCfield == 66L:
+        decodedPacket[Dot11].FCfield = 2L
+    
+    return decodedPacket
+    
+
+def demo(verbose = 'no'):
+    ### Example of decoding
+    ## This is our packet grabbed via scapy on wlan0mon
+    ePkt = wepICMP[3].copy()
+
+    ## This is a decoded wepdata string
+    fullStream, stream, iVal, seed = crypto.decoder(ePkt, keyText)
+    if verbose == 'yes':
+        print 'decoder ran'
+
+    ## This is our newly minted packet!
+    ## Should use stream, see pubNotes(1) to understand the workaround
+    #decodedPacket = crypto.deBuilder(ePkt, stream)
+    decodedPacket = crypto.deBuilder(ePkt, fullStream)
+    if verbose == 'yes':
+        print 'deBuilder ran\n'
+
+    ### We do our thing, decide we want to trigger on decodedPacket.......
+    ### Keep in mind, this is a LAN style attack, k?
+    ### Will have to mod for actual airpwn-ng usage
+    ### Go ahead and flip whatever bits for from/to-ds, mac, etc..
+
+    ### Example of Encoding
+    ## Encode the LLC layer via rc4
+    stream, wepICV = crypto.encoder(decodedPacket, iVal, keyText)
+    if verbose == 'yes':
+        print '\nencoder ran'
+
+    ## This is our newly minted packet!
+    outPacket = crypto.enBuilder(decodedPacket, stream, iVal, wepICV)
+    if verbose == 'yes':
+        print 'enBuilder ran\n'
+
+    ## Display results
+    print 'Original:'
+    print ePkt[Dot11WEP].show()
+    print ''
+    print 'New:'
+    print outPacket[Dot11WEP].show()
+    print ''
+    print 'wepdata compare:'
+    print ePkt[Dot11WEP].wepdata == outPacket[Dot11WEP].wepdata
+    print ''
+    print 'icv compare:'
+    print ePkt[Dot11WEP].icv == outPacket[Dot11WEP].icv
+
+try:
+    if sys.argv[1] == '--help':
+        print 'Perform the following:\n'
+        print 'ipython'
+        print '%run pyDot11' 
+        print 'pkt = wepDecrypt(wepICMP[0])'
+        print 'pkt'
+        
+except:
+    pass
+

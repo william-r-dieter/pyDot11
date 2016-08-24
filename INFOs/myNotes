@@ -1,0 +1,45 @@
+## To obtain an understanding of how the WEP ICV should work
+RC4 of MPDU - 2619
+
+
+## PCAPs details
+to-DS:       1L
+from-DS:     2L
+to-DS+wep:   65L
+from-DS+wep: 66L
+
+## From sender to router
+FCfield=to-DS+wep ID=11264 addr1=ce:e1:d5:00:13:9a addr2=4e:40:cd:16:5a:1d addr3=c4:d9:87:e4:62:5e
+
+## From router to receiver
+FCfield=from-DS+wep ID=11264 addr1=c4:d9:87:e4:62:5e addr2=ce:e1:d5:00:13:9a addr3=4e:40:cd:16:5a:1d
+
+router    -- ce:e1:d5:00:13:9a (192.168.100.1)
+sender    -- 4e:40:cd:16:5a:1d (192.168.100.136)
+receiver  -- c4:d9:87:e4:62:5e (192.168.100.148)
+
+
+## Definitions
+IV   -- Initialization Vector
+MPDU -- Medium Access Control (MAC) Protocol Data Unit
+
+
+## Bit flipping
+use 66L to play with LAN
+
+
+## Checksum
+Delete the chksum and then:
+    pkt = pkt.__class__(str(pkt))
+    
+
+## Weird finding
+When running pkt = wepDecrypt(wepICMP[0]):
+    print pkt.__class__
+    print pkt.__class__(str(pkt))
+Do i need to recreate pkt from top down first? X()/Y()/Z()/etc....?
+
+
+
+## deBuilder
+Needs to ensure bits are set proper, i.e. remove from-wep, etc..
