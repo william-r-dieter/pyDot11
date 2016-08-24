@@ -80,6 +80,10 @@ try:
         print '%run pyDot11' 
         print 'pkt = wepDecrypt(wepICMP[0])'
         print 'pkt'
+        print '## Want to play with your own packets?'
+        print 'pkt = wepDecrypt(packet, keyText = <password for the WEP>)'
+        print 'Of note, keyText only deals with 10 numbers right now,'
+        print 'ASCII chars have not been implemented (i.e. ABCDE)'
         
 except:
     pass
