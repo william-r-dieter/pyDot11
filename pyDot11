@@ -24,8 +24,26 @@ def wepDecrypt(pkt, keyText = keyText, method = 'pcap'):
     elif decodedPacket[Dot11].FCfield == 66L:
         decodedPacket[Dot11].FCfield = 2L
     
-    return decodedPacket
-    
+    return decodedPacket, iVal
+
+def wepEncrypt(pkt, iVal = '\xba0\x0e', keyText = keyText, method = 'pcap'):
+    """Encompasses the steps needed to encrypt a WEP packet"""
+    if method == 'pcap':
+        pkt = pkt.copy()
+       
+    ## Encode the LLC layer via rc4
+    stream, wepICV = crypto.encoder(pkt, iVal, keyText)
+
+    ## This is our newly minted packet!
+    encodedPacket = crypto.enBuilder(pkt, stream, iVal, wepICV)    
+
+    ## Flip FCField bits accordingly
+    if encodedPacket[Dot11].FCfield == 1L:
+        encodedPacket[Dot11].FCfield = 65L
+    elif encodedPacket[Dot11].FCfield == 2L:
+        encodedPacket[Dot11].FCfield = 66L
+
+    return encodedPacket
 
 def demo(verbose = 'no'):
     ### Example of decoding

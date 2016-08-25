@@ -66,13 +66,14 @@ class Wep(object):
 
     def encoder(self, pkt, iVal, keyText):
         ## Calculate the WEP Integrity Check Value (ICV)
-        wepICV = crc32(str(pkt[LLC]))
+        #wepICV = crc32(str(pkt[LLC]))
+        wepICV = crc32(str(pkt[LLC])) & 0xffffffff
         plainText = str(pkt[LLC])
         
-        print 'wepICV is: ', wepICV
-        print 'hex of ^ is: ', hex(wepICV)
-        print 'unhexlify of ^ is: ', unhexlify(re.sub('0x', '', hex(wepICV)))
-        print 'repr of ^ is: ', repr(unhexlify(re.sub('0x', '', hex(wepICV))))
+        #print 'wepICV is: ', wepICV
+        #print 'hex of ^ is: ', hex(wepICV)
+        #print 'unhexlify of ^ is: ', unhexlify(re.sub('0x', '', hex(wepICV)))
+        #print 'repr of ^ is: ', repr(unhexlify(re.sub('0x', '', hex(wepICV))))
         #stream = plainText + str(wepICV)
         #stream = plainText + hex(wepICV)
         #stream = plainText + unhexlify(re.sub('0x', '', hex(wepICV)))

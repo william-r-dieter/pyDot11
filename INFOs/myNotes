@@ -43,3 +43,28 @@ Do i need to recreate pkt from top down first? X()/Y()/Z()/etc....?
 
 ## deBuilder
 Needs to ensure bits are set proper, i.e. remove from-wep, etc..
+
+
+## icv fun
+icv=2862492093
+hex(2862492093)
+Out[27]: '0xaa9e29bd'
+unhexlify('aa9e29bd')
+Out[28]: '\xaa\x9e)\xbd'
+hexstr('\xaa\x9e)\xbd')
+Out[33]: 'aa 9e 29 bd  ..).'
+
+
+## Trying to build a packet from scratch and encode it
+pingr = IP(dst="192.168.100.148", src="192.168.100.136")/ICMP()
+wifiBody = wepICMP[1].copy()
+del wifiBody[Dot11WEP]
+wifiHeader = wifiBody.copy()
+wifiMiddle = openICMP[1][LLC].copy()
+del wifiMiddle[IP]
+wifiEnd = pingr.copy()
+wifiMiddle = wifiMiddle/IP(str(wifiEnd))
+wifiHeader[Dot11].FCfield = 2L
+wifiHeader = wifiHeader/LLC(str(wifiMiddle))
+wifiHeader = wifiHeader.__class__(str(wifiHeader))
+pkt = wepEncrypt(wifiHeader)
