@@ -3,20 +3,24 @@
 import logging, sys
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from rc4 import rc4
-from lib.crypto import Wep
+from lib.crypto import Wep, Wpa
 from scapy.all import *
 
-crypto = Wep()
+wepCrypto = Wep()
+wpaCrypto = Wpa()
 keyText = '0123456789'
 wepICMP = rdpcap('PCAPs/wep_pings.pcap')
 openICMP = rdpcap('PCAPs/open_pings.pcap')
 
+
+
+### WEP PORTION
 def wepDecrypt(pkt, keyText = keyText, method = 'pcap'):
     """Encompasses the steps needed to decrypt a WEP packet"""
     if method == 'pcap':
         pkt = pkt.copy()
-    fullStream, stream, iVal, seed = crypto.decoder(pkt, keyText)
-    decodedPacket = crypto.deBuilder(pkt, fullStream)
+    fullStream, stream, iVal, seed = wepCrypto.decoder(pkt, keyText)
+    decodedPacket = wepCrypto.deBuilder(pkt, fullStream)
 
     ## Flip FCField bits accordingly
     if decodedPacket[Dot11].FCfield == 65L:
@@ -26,16 +30,17 @@ def wepDecrypt(pkt, keyText = keyText, method = 'pcap'):
     
     return decodedPacket, iVal
 
+
 def wepEncrypt(pkt, iVal = '\xba0\x0e', keyText = keyText, method = 'pcap'):
     """Encompasses the steps needed to encrypt a WEP packet"""
     if method == 'pcap':
         pkt = pkt.copy()
        
     ## Encode the LLC layer via rc4
-    stream, wepICV = crypto.encoder(pkt, iVal, keyText)
+    stream, wepICV = wepCrypto.encoder(pkt, iVal, keyText)
 
     ## This is our newly minted packet!
-    encodedPacket = crypto.enBuilder(pkt, stream, iVal, wepICV)    
+    encodedPacket = wepCrypto.enBuilder(pkt, stream, iVal, wepICV)    
 
     ## Flip FCField bits accordingly
     if encodedPacket[Dot11].FCfield == 1L:
@@ -45,64 +50,38 @@ def wepEncrypt(pkt, iVal = '\xba0\x0e', keyText = keyText, method = 'pcap'):
 
     return encodedPacket
 
-def demo(verbose = 'no'):
-    ### Example of decoding
-    ## This is our packet grabbed via scapy on wlan0mon
-    ePkt = wepICMP[3].copy()
 
-    ## This is a decoded wepdata string
-    fullStream, stream, iVal, seed = crypto.decoder(ePkt, keyText)
-    if verbose == 'yes':
-        print 'decoder ran'
 
-    ## This is our newly minted packet!
-    ## Should use stream, see pubNotes(1) to understand the workaround
-    #decodedPacket = crypto.deBuilder(ePkt, stream)
-    decodedPacket = crypto.deBuilder(ePkt, fullStream)
-    if verbose == 'yes':
-        print 'deBuilder ran\n'
+### WPA PORTION
+def eapolGrab():
+    """Grab the EAPOL
+    Needs logic in case of multiple auth at one
+    """
+    pkts = sniff(iface = 'wlan0mon', lfilter = lambda p: p.haslayer(EAPOL) and p.type == 2, count = 4)
+    vMAC = pkts[0][Dot11].addr1
+    bMAC = pkts[0][Dot11].addr2
+    eapolCapture = wpaCrypto.shakeDict[vMAC] = {}
+    eapolCapture[bMAC] = pkts
+    return vMAC, bMAC
 
-    ### We do our thing, decide we want to trigger on decodedPacket.......
-    ### Keep in mind, this is a LAN style attack, k?
-    ### Will have to mod for actual airpwn-ng usage
-    ### Go ahead and flip whatever bits for from/to-ds, mac, etc..
+def wpaHandshake():
+    """Store EAPOLs based upon BSSID based upon originating MAC"""
+    vMAC, bMAC = eapolGrab()
+    vicMAC = wpaCrypto.shakeDict[vMAC]
+    bDict = vicMAC[bMAC]
 
-    ### Example of Encoding
-    ## Encode the LLC layer via rc4
-    stream, wepICV = crypto.encoder(decodedPacket, iVal, keyText)
-    if verbose == 'yes':
-        print '\nencoder ran'
 
-    ## This is our newly minted packet!
-    outPacket = crypto.enBuilder(decodedPacket, stream, iVal, wepICV)
-    if verbose == 'yes':
-        print 'enBuilder ran\n'
-
-    ## Display results
-    print 'Original:'
-    print ePkt[Dot11WEP].show()
-    print ''
-    print 'New:'
-    print outPacket[Dot11WEP].show()
-    print ''
-    print 'wepdata compare:'
-    print ePkt[Dot11WEP].wepdata == outPacket[Dot11WEP].wepdata
-    print ''
-    print 'icv compare:'
-    print ePkt[Dot11WEP].icv == outPacket[Dot11WEP].icv
-
+### Lazy help menu
 try:
     if sys.argv[1] == '--help':
-        print 'Perform the following:\n'
-        print 'ipython'
-        print '%run pyDot11' 
-        print 'pkt = wepDecrypt(wepICMP[0])'
-        print 'pkt'
-        print '## Want to play with your own packets?'
-        print 'pkt = wepDecrypt(packet, keyText = <password for the WEP>)'
-        print 'Of note, keyText only deals with 10 numbers right now,'
-        print 'ASCII chars have not been implemented (i.e. ABCDE)'
-        
+        print 'Perform the following for WEP:'
+        print '  ipython'
+        print '  %run pyDot11' 
+        print '  pkt = wepDecrypt(wepICMP[0])'
+        print '  pkt'
+        print '  ## Want to play with your own packets?'
+        print '  pkt = wepDecrypt(packet, keyText = <password for the WEP>)\n'
+        print 'Perform the following for WPA:'
+        print '  wpaHandshake():'
 except:
     pass
-

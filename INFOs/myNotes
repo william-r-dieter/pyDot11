@@ -70,3 +70,4 @@ wifiHeader = wifiHeader.__class__(str(wifiHeader))
 pkt = wepEncrypt(wifiHeader)
 
 ### I think the padding is perhaps something......
+    ### Play with rc4 and xx xx xx xx yy yy yy yy on last bytes.  y* should be x* via rc4

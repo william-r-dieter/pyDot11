@@ -10,13 +10,13 @@ class Wep(object):
     
     
     def seedGen(self, iv, keyText):
-        """Simple for now
-        Experiments on 5-char ASCII have not been done yet
-        Once those experiments are complete,
-        this () will contain if logic to determine how to build the seed
-        I theorize that 01234567890 will be parsed differently than ABCDE
-        """
-        return iv + keyText
+        """Need to deal with > 64-bit"""
+        keyLen = len(keyText)
+        if keyLen == 5:
+            key = unhexlify(re.sub(' ', '', hexstr(keyText, onlyhex=1)))
+        elif keyLen == 10:
+            key = unhexlify(keyText)
+        return iv + key
     
     
     def deBuilder(self, pkt, stream):
@@ -47,7 +47,7 @@ class Wep(object):
         """
         ## Re-use the IV for comparative purposes
         iVal = pkt[Dot11WEP].iv
-        seed = self.seedGen(iVal, unhexlify(keyText))
+        seed = self.seedGen(iVal, keyText)
         
         ## Grab full stream
         fullStream = rc4(pkt[Dot11WEP].wepdata, seed)
@@ -102,5 +102,6 @@ class Wep(object):
         
 
 class Wpa(object):
-    pass
 
+    def __init__(self):
+        self.shakeDict = {}
