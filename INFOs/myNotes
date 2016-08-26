@@ -48,7 +48,7 @@ Needs to ensure bits are set proper, i.e. remove from-wep, etc..
 ## icv fun
 icv=2862492093
 hex(2862492093)
-Out[27]: '0xaa9e29bd'
+Out[27]: '0xaa9e29bd'  <-- int('0xaa9e29bd', 16) reverses <-- 0x is optional
 unhexlify('aa9e29bd')
 Out[28]: '\xaa\x9e)\xbd'
 hexstr('\xaa\x9e)\xbd')
@@ -68,3 +68,5 @@ wifiHeader[Dot11].FCfield = 2L
 wifiHeader = wifiHeader/LLC(str(wifiMiddle))
 wifiHeader = wifiHeader.__class__(str(wifiHeader))
 pkt = wepEncrypt(wifiHeader)
+
+### I think the padding is perhaps something......
