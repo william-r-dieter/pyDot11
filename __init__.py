@@ -1,26 +1,19 @@
-#!/usr/bin/python2.7
+# Copyright (C) 2016 stryngs
 
 import logging, sys
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
+from .lib.crypto import Wep, Wpa
 from rc4 import rc4
-from lib.crypto import Wep, Wpa
 from scapy.all import *
 
-wepCrypto = Wep()
-wpaCrypto = Wpa()
-keyText = '0123456789'
-wepICMP = rdpcap('PCAPs/wep_pings.pcap')
-openICMP = rdpcap('PCAPs/open_pings.pcap')
-
-
-
 ### WEP PORTION
-def wepDecrypt(pkt, keyText = keyText, method = 'pcap'):
+def wepDecrypt(pkt, keyText):
     """Encompasses the steps needed to decrypt a WEP packet"""
-    if method == 'pcap':
-        pkt = pkt.copy()
     fullStream, stream, iVal, seed = wepCrypto.decoder(pkt, keyText)
-    decodedPacket = wepCrypto.deBuilder(pkt, fullStream)
+    
+    ## Very torn on this...
+    #decodedPacket = wepCrypto.deBuilder(pkt, fullStream)
+    decodedPacket = wepCrypto.deBuilder(pkt, stream)
 
     ## Flip FCField bits accordingly
     if decodedPacket[Dot11].FCfield == 65L:
@@ -31,10 +24,9 @@ def wepDecrypt(pkt, keyText = keyText, method = 'pcap'):
     return decodedPacket, iVal
 
 
-def wepEncrypt(pkt, iVal = '\xba0\x0e', keyText = keyText, method = 'pcap'):
+def wepEncrypt(pkt, keyText, iVal = '\xba0\x0e', ):
     """Encompasses the steps needed to encrypt a WEP packet"""
-    if method == 'pcap':
-        pkt = pkt.copy()
+    pkt = pkt.copy()
        
     ## Encode the LLC layer via rc4
     stream, wepICV = wepCrypto.encoder(pkt, iVal, keyText)
@@ -71,17 +63,6 @@ def wpaHandshake():
     bDict = vicMAC[bMAC]
 
 
-### Lazy help menu
-try:
-    if sys.argv[1] == '--help':
-        print 'Perform the following for WEP:'
-        print '  ipython'
-        print '  %run pyDot11' 
-        print '  pkt = wepDecrypt(wepICMP[0])'
-        print '  pkt'
-        print '  ## Want to play with your own packets?'
-        print '  pkt = wepDecrypt(packet, keyText = <password for the WEP>)\n'
-        print 'Perform the following for WPA:'
-        print '  wpaHandshake():'
-except:
-    pass
+## Instantiations
+wepCrypto = Wep()
+wpaCrypto = Wpa()

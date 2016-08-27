@@ -54,6 +54,15 @@ Out[28]: '\xaa\x9e)\xbd'
 hexstr('\xaa\x9e)\xbd')
 Out[33]: 'aa 9e 29 bd  ..).'
 
+from pyDot11 import *
+wepICMP = rdpcap('PCAPs/wep_pings.pcap')
+dec, iVal = wepDecrypt(wepICMP[1], keyText = '0123456789')
+enc = wepICMP[1]
+encICV = enc[Dot11WEP].wepdata[-4:]
+encICVnum = enc[Dot11WEP].icv
+decICV = dec[ICMP][Padding].load
+
+
 
 ## Trying to build a packet from scratch and encode it
 pingr = IP(dst="192.168.100.148", src="192.168.100.136")/ICMP()

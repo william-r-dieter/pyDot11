@@ -4,6 +4,7 @@ from rc4 import rc4
 from scapy.all import *
 
 class Wep(object):
+    """All things WEP related"""
 
     def __init__(self):
         pass
@@ -20,21 +21,15 @@ class Wep(object):
     
     
     def deBuilder(self, pkt, stream):
-        """Take 
-        """
-        
+        """Take the pkt object and apply stream to [LLC]"""
         ## Mirror the packet
         reflection = pkt.copy()
 
         ## Remove the encryption layer
         del reflection[Dot11WEP]
 
-        ## Add the LLC layer
-        reflection = reflection/LLC()
-
-        ## Create the packet without encryption and return it
-        llcStruct = LLC(stream)
-        reflection[LLC] = llcStruct
+        ## Add the LLC layer using the decrypted stream
+        reflection = reflection/LLC(stream)
         return reflection
 
 
@@ -52,13 +47,8 @@ class Wep(object):
         ## Grab full stream
         fullStream = rc4(pkt[Dot11WEP].wepdata, seed)
         
-        ## Prep for removing the 4 icv bytes
-        tmp = []
-        stream = ''
-        for i in range(len(fullStream) - 4):
-            tmp.append(fullStream[i])
-        for i in tmp:
-            stream += i
+        ## Drop the 4 icv bytes
+        stream = fullStream[0:-4]
         
         ## Return the fullstream, stream and iv
         return fullStream, stream, iVal, seed
