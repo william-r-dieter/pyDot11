@@ -1,12 +1,18 @@
 # Copyright (C) 2016 stryngs
 
 import logging, sys
+
+### Transfer to Wpa Class
+import hmac, hashlib, binascii, sha
+
+
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from .lib.crypto import Wep, Wpa
+from pbkdf2 import PBKDF2
 from rc4 import rc4
 from scapy.all import *
 
-### WEP PORTION
+## WEP PORTION
 def wepDecrypt(pkt, keyText):
     """Encompasses the steps needed to decrypt a WEP packet"""
     fullStream, stream, iVal, seed = wepCrypto.decoder(pkt, keyText)
@@ -44,7 +50,8 @@ def wepEncrypt(pkt, keyText, iVal = '\xba0\x0e', ):
 
 
 
-### WPA PORTION
+## WPA PORTION
+### Most of this will be classed
 def eapolGrab():
     """Grab the EAPOL
     Needs logic in case of multiple auth at one
@@ -56,13 +63,31 @@ def eapolGrab():
     eapolCapture[bMAC] = pkts
     return vMAC, bMAC
 
-def wpaHandshake():
+
+def handShake():
     """Store EAPOLs based upon BSSID based upon originating MAC"""
+    ### Create a way for new EAPOLs so that the old EAPOL is deleted
     vMAC, bMAC = eapolGrab()
     vicMAC = wpaCrypto.shakeDict[vMAC]
     bDict = vicMAC[bMAC]
 
 
-## Instantiations
+def pmkGen(passwd, essid):
+    """Silly return for now"""
+    return PBKDF2(passwd, essid, 4096).read(32).encode('hex')
+
+
+def customPRF512(key, A, B):  
+    blen = 64
+    i    = 0
+    R    = ''
+    while i<=((blen*8+159)/160):
+        hmacsha1 = hmac.new(key, A + chr(0x00) + B + chr(i), hashlib.sha1)
+        i += 1
+        R = R + hmacsha1.digest()
+    return R[:blen]
+
+
+### Instantiations
 wepCrypto = Wep()
 wpaCrypto = Wpa()
