@@ -33,17 +33,7 @@ Delete the chksum and then:
     pkt = pkt.__class__(str(pkt))
     
 
-## Weird finding
-When running pkt = wepDecrypt(wepICMP[0]):
-    print pkt.__class__
-    print pkt.__class__(str(pkt))
-Do i need to recreate pkt from top down first? X()/Y()/Z()/etc....?
-
-
-
-## deBuilder
-Needs to ensure bits are set proper, i.e. remove from-wep, etc..
-
+## Do i need to recreate pkt from top down first? X()/Y()/Z()/etc....?
 
 ## icv fun
 icv=2862492093
@@ -55,12 +45,21 @@ hexstr('\xaa\x9e)\xbd')
 Out[33]: 'aa 9e 29 bd  ..).'
 
 from pyDot11 import *
-wepICMP = rdpcap('PCAPs/wep_pings.pcap')
+wepICMP = rdpcap('PCAPs/ICMPs/wep_pings.pcap')
 dec, iVal = wepDecrypt(wepICMP[1], keyText = '0123456789')
 enc = wepICMP[1]
 encICV = enc[Dot11WEP].wepdata[-4:]
 encICVnum = enc[Dot11WEP].icv
 decICV = dec[ICMP][Padding].load
+
+print 'wepICV is: ', wepICV
+print 'hex of ^ is: ', hex(wepICV)
+print 'unhexlify of ^ is: ', unhexlify(re.sub('0x', '', hex(wepICV)))
+print 'repr of ^ is: ', repr(unhexlify(re.sub('0x', '', hex(wepICV))))
+stream = plainText + str(wepICV)
+stream = plainText + hex(wepICV)
+stream = plainText + unhexlify(re.sub('0x', '', hex(wepICV)))
+
 
 
 
@@ -80,3 +79,14 @@ pkt = wepEncrypt(wifiHeader)
 
 ### I think the padding is perhaps something......
     ### Play with rc4 and xx xx xx xx yy yy yy yy on last bytes.  y* should be x* via rc4
+
+
+## Useful wpa knowledge
+https://ins1gn1a.com/understanding-wpa-psk-cracking/
+
+
+## wpa
+    if (ap->wpa.keyver == 1)
+        HMAC(EVP_md5(), ptk[j], 16, ap->wpa.eapol, ap->wpa.eapol_size, mic[j], NULL);
+    else
+        HMAC(EVP_sha1(), ptk[j], 16, ap->wpa.eapol, ap->wpa.eapol_size, mic[j], NULL);

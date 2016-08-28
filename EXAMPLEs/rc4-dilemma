@@ -9,8 +9,8 @@ from lib.crypto import Wep
 
 wepCrypto = Wep()
 keyText = '0123456789'
-wepICMP = rdpcap('../PCAPs/wep_pings.pcap')
-openICMP = rdpcap('../PCAPs/open_pings.pcap')
+wepICMP = rdpcap('../PCAPs/ICMPs/wep_pings.pcap')
+openICMP = rdpcap('../PCAPs/ICMPs/open_pings.pcap')
 
 def demo(verbose = 'no'):
     ### Example of decoding
