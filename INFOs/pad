@@ -1,83 +1,43 @@
 #!/usr/bin/python2.7
 
-import re, binascii, hmac, hashlib
-from pyDot11 import *
-from pbkdf2 import PBKDF2 as pbkdf2
-#vMac = wpaCrypto.shakeDict['14:cc:20:13:d5:08']
-#bMac = 'cc:e1:d5:00:13:9a'
-vMac = rdpcap('eapol.pcap')
-#one = vMac[bMac][0]
-one = vMac[0]
-#two = vMac[bMac][1]
-two = vMac[1]
-passPhrase = 'P@$$w0rd1!P@$$w0rd1!'
-ssid = 'wifi4'
-A = 'Pairwise key expansion'
-APmac = binascii.a2b_hex(re.sub(':', '', 'cc:e1:d5:00:13:9a'))
-Clientmac = binascii.a2b_hex(re.sub(':', '', '14:cc:20:13:d5:08'))
-ANonce = re.sub(' ', '', hexstr(str(one), onlyhex = 1)[267:362])
-SNonce = re.sub(' ', '', hexstr(str(two), onlyhex = 1)[267:362])
-B = min(APmac, Clientmac) + max(APmac, Clientmac) + min(ANonce, SNonce) + max(ANonce, SNonce)
-
-#pmk = pbkdf2(passPhrase, ssid, 4096, 32)
-#pmk = pmkGen(passPhrase, ssid)
-#pmk = pbkdf2(passPhrase, ssid, 4096).read(16).encode('hex')
-#pmk = pbkdf2(passPhrase, ssid).read(16).encode('hex')
-
-### Confirmed correct hex output
-pmk = pbkdf2(passPhrase, ssid, 4096).read(32).encode('hex')
-
-
-ptk = customPRF512(pmk, A, B)
-#encPkts = rdpcap('wpa-flow.pcap')
-#snarf = re.sub(' ', '', hexstr(str(encPkts[0][Dot11WEP].wepdata), onlyhex = 1))[0:-4]
-#snarf = re.sub(' ', '', hexstr(str(encPkts[0][Dot11WEP].wepdata), onlyhex = 1))
-#data = binascii.a2b_hex(snarf)
-#mic = hmac.new(ptk[0:16],data)
-
-printPMK = binascii.b2a_hex(pmk)
-printPTK = binascii.b2a_hex(ptk[0:16])
-#printMIC = mic.hexdigest()
-
-
-
-
-
-#https://ins1gn1a.com/understanding-wpa-psk-cracking/
-
-
-
-#def customPRF512(key,A,B):  
-    #blen = 64
-    #i    = 0
-    #R    = ''
-    #while i<=((blen*8+159)/160):
-        #hmacsha1 = hmac.new(key,A+chr(0x00)+B+chr(i),hashlib.sha1)
-        #i+=1
-        #R = R+hmacsha1.digest()
-    #return R[:blen]
-
 import hmac,hashlib,binascii,sha, re
 from pbkdf2 import PBKDF2
 from scapy.all import *
 from pyDot11 import *
 
-vMac = rdpcap('eapol.pcap')
-one = vMac[0]
-two = vMac[1]
-passphrase = 'P@$$w0rd1!P@$$w0rd1!'
-ssid = 'wifi4'
-ap_mac = binascii.a2b_hex(re.sub(':', '', 'cc:e1:d5:00:13:9a'))
-s_mac = binascii.a2b_hex(re.sub(':', '', '14:cc:20:13:d5:08'))
-anonce = re.sub(' ', '', hexstr(str(one), onlyhex = 1)[267:362])
-snonce = re.sub(' ', '', hexstr(str(two), onlyhex = 1)[267:362])
+#https://ins1gn1a.com/understanding-wpa-psk-cracking/
+#http://etutorials.org/Networking/802.11+security.+wi-fi+protected+access+and+802.11i/Part+II+The+Design+of+Wi-Fi+Security/Chapter+10.+WPA+and+RSN+Key+Hierarchy/Computing+the+Temporal+Keys/
+
+def xPRF512(key, A, B):  
+    blen = 64
+    i    = 0
+    R    = ''
+    while i<=((blen*8+159)/160):
+        hmacsha1 = hmac.new(key, A + chr(0x00) + B + chr(i), hashlib.sha1)
+        i += 1
+        R = R + hmacsha1.digest()
+    return R[:blen]
+
+ssid = 'wpa2-aes'
+passphrase = 'password'
+vMac = rdpcap('../PCAPs/EAPOLs/%s.pcap' % ssid) 
+one = vMac[1]
+two = vMac[2]
+ap_mac = binascii.a2b_hex(re.sub(':', '', two[Dot11].addr1))
+s_mac = binascii.a2b_hex(re.sub(':', '', one[Dot11].addr1))
+anonce = binascii.a2b_hex(re.sub(' ', '', hexstr(str(one), onlyhex = 1)[267:362]))
+snonce = binascii.a2b_hex(re.sub(' ', '', hexstr(str(two), onlyhex = 1)[267:362]))
 
 pke = "Pairwise key expansion"  
+pmk = PBKDF2(passphrase, ssid, 4096).read(32)
+objPMK = pmk.encode('hex')
+
 key_data = min(ap_mac, s_mac) + max(ap_mac, s_mac) + min(anonce, snonce) + max(anonce, snonce)
 
-pmk = PBKDF2(passphrase, ssid, 4096).read(32).encode('hex')
-ptk = customPRF512(pmk, pke, key_data).encode('hex')
 
-pmk
-ptk
-ptk[0:16]
+ptk = xPRF512(pmk, pke, key_data).encode('hex')
+kck = ptk[0:16]
+
+#mic = hmac.new(kck, data)
+#print "mic: " + mic.hexdigest()  + "\n"
+

@@ -73,11 +73,13 @@ def handShake():
 
 
 def pmkGen(passwd, essid):
-    """Silly return for now"""
-    return PBKDF2(passwd, essid, 4096).read(32).encode('hex')
+    """Silly return for now
+    To view PMK, .encode('hex')
+    """
+    return PBKDF2(passwd, essid, 4096).read(32)
 
 
-def customPRF512(key, A, B):  
+def PRF512(key, A, B):  
     blen = 64
     i    = 0
     R    = ''

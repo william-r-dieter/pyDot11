@@ -11,12 +11,21 @@ class Wep(object):
     
     
     def seedGen(self, iv, keyText):
-        """Need to deal with > 64-bit"""
+        """Currently works with 40-bit and 104-bit"""
         keyLen = len(keyText)
+        
+        ## 40-bit
         if keyLen == 5:
             key = unhexlify(re.sub(' ', '', hexstr(keyText, onlyhex=1)))
         elif keyLen == 10:
             key = unhexlify(keyText)
+        
+        ## 104-bit
+        if keyLen == 13:
+            key = unhexlify(re.sub(' ', '', hexstr(keyText, onlyhex=1)))
+        elif keyLen == 26:
+            key = unhexlify(keyText)
+            
         return iv + key
     
     
@@ -56,17 +65,9 @@ class Wep(object):
 
     def encoder(self, pkt, iVal, keyText):
         ## Calculate the WEP Integrity Check Value (ICV)
-        #wepICV = crc32(str(pkt[LLC]))
+        ## Deal with nega
         wepICV = crc32(str(pkt[LLC])) & 0xffffffff
         plainText = str(pkt[LLC])
-        
-        #print 'wepICV is: ', wepICV
-        #print 'hex of ^ is: ', hex(wepICV)
-        #print 'unhexlify of ^ is: ', unhexlify(re.sub('0x', '', hex(wepICV)))
-        #print 'repr of ^ is: ', repr(unhexlify(re.sub('0x', '', hex(wepICV))))
-        #stream = plainText + str(wepICV)
-        #stream = plainText + hex(wepICV)
-        #stream = plainText + unhexlify(re.sub('0x', '', hex(wepICV)))
         stream = plainText
         
         ## crypt
