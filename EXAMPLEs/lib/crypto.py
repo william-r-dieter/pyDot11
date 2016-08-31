@@ -1,6 +1,10 @@
 from binascii import crc32, hexlify, unhexlify
-from rc4 import rc4
 from scapy.all import *
+try:
+    from rc4 import rc4
+except:
+    print 'rc4 from pip must be installed to continue\n'
+    exit(1)
 
 class Wep(object):
     """All things WEP related"""

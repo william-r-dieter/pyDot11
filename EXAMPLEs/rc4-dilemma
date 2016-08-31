@@ -2,7 +2,11 @@
 
 import logging, sys
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
-from scapy.all import *
+try:
+    from scapy.all import *
+except:
+    print 'scapy from pip must be installed to continue\n'
+    exit(1)
 from lib.crypto import Wep
 
 wepCrypto = Wep()
