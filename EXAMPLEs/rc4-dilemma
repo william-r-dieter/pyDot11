@@ -2,10 +2,7 @@
 
 import logging, sys
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
-from rc4 import rc4
-from binascii import *
 from scapy.all import *
-sys.path.append("../")
 from lib.crypto import Wep
 
 wepCrypto = Wep()
@@ -13,39 +10,23 @@ keyText = '0123456789'
 wepICMP = rdpcap('../PCAPs/ICMPs/wep_pings.pcap')
 openICMP = rdpcap('../PCAPs/ICMPs/open_pings.pcap')
 
-#def demo(verbose = 'no'):
-verbose='no'
 ### Example of decoding
 ## This is our packet grabbed via scapy on wlan0mon
 ePkt = wepICMP[3].copy()
 
 ## This is a decoded wepdata string
-fullStream, stream, iVal, seed = wepCrypto.decoder(ePkt, keyText)
-if verbose == 'yes':
-    print 'decoder ran'
+stream, iVal, seed = wepCrypto.decoder(ePkt, keyText)
 
-## This is our newly minted packet!
-## Should use stream, see pubNotes(1) to understand the workaround
-#decodedPacket = wepCrypto.deBuilder(ePkt, stream)
+## This is our newly minted packet
 decodedPacket = wepCrypto.deBuilder(ePkt, stream)
-if verbose == 'yes':
-    print 'deBuilder ran\n'
 
-### We do our thing, decide we want to trigger on decodedPacket.......
-### Keep in mind, this is a LAN style attack, k?
-### Will have to mod for actual airpwn-ng usage
-### Go ahead and flip whatever bits for from/to-ds, mac, etc..
 
 ### Example of Encoding
 ## Encode the LLC layer via rc4
-stream, wepICV, hexCRC = wepCrypto.encoder(decodedPacket, iVal, keyText)
-if verbose == 'yes':
-    print '\nencoder ran'
+stream, wepICV = wepCrypto.encoder(decodedPacket, iVal, keyText)
 
-## This is our newly minted packet!
+## This is our newly minted packet
 outPacket = wepCrypto.enBuilder(decodedPacket, stream, iVal, wepICV)
-if verbose == 'yes':
-    print 'enBuilder ran\n'
 
 ## Display results
 print 'Original:'
@@ -59,6 +40,3 @@ print ePkt[Dot11WEP].wepdata == outPacket[Dot11WEP].wepdata
 print ''
 print 'icv compare:'
 print ePkt[Dot11WEP].icv == outPacket[Dot11WEP].icv
-
-
-#demo()

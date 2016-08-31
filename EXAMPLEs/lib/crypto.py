@@ -1,4 +1,3 @@
-import re
 from binascii import crc32, hexlify, unhexlify
 from rc4 import rc4
 from scapy.all import *
@@ -16,13 +15,13 @@ class Wep(object):
         
         ## 40-bit
         if keyLen == 5:
-            key = unhexlify(re.sub(' ', '', hexstr(keyText, onlyhex=1)))
+            key = unhexlify(hexstr(keyText, onlyhex=1).replace(' ', ''))
         elif keyLen == 10:
             key = unhexlify(keyText)
         
         ## 104-bit
         if keyLen == 13:
-            key = unhexlify(re.sub(' ', '', hexstr(keyText, onlyhex=1)))
+            key = unhexlify(hexstr(keyText, onlyhex=1).replace(' ', ''))
         elif keyLen == 26:
             key = unhexlify(keyText)
             
@@ -43,12 +42,7 @@ class Wep(object):
 
 
     def decoder(self, pkt, keyText):
-        """Take a packet with [Dot11WEP] and apply RC4 to get the [LLC]
-        This function should not need to return fullStream,
-        however, because of quirks I've noticed, I return
-        fullStream and stream.
-        The seed doesn't need to be returned, but why calculate again...
-        """
+        """Take a packet with [Dot11WEP] and apply RC4 to get the [LLC]"""
         ## Re-use the IV for comparative purposes
         iVal = pkt[Dot11WEP].iv
         seed = self.seedGen(iVal, keyText)
@@ -59,16 +53,15 @@ class Wep(object):
         ## Drop the 4 icv bytes
         stream = fullStream[0:-4]
         
-        ## Return the fullstream, stream and iv
-        return fullStream, stream, iVal, seed
+        ## Return the stream, iv and seed
+        return stream, iVal, seed
 
 
     def encoder(self, pkt, iVal, keyText):
+        """Create [LLC] encoded as .wepdata"""
         ## Calculate the WEP Integrity Check Value (ICV)
-        ## Deal with negative crc
-        wepICV = crc32(str(pkt[LLC])) & 0xffffffff
-        plainText = str(pkt[LLC])
-        stream = plainText
+        wepICV = crc32(str(pkt[LLC]))
+        stream = str(pkt[LLC]) + unhexlify(hex(wepICV).replace('0x', ''))
         
         ## crypt
         seed = self.seedGen(iVal, unhexlify(keyText))
@@ -76,6 +69,7 @@ class Wep(object):
 
 
     def enBuilder(self, pkt, stream, iVal, wepICV):
+        """Assemble WEP encrypted packet"""
         ## Mirror the packet
         reflection = pkt.copy()
 
@@ -83,16 +77,6 @@ class Wep(object):
         del reflection[LLC]
 
         ## Add the Dot11WEP layer
-        reflection = reflection/Dot11WEP()
-        reflection[Dot11WEP].iv = iVal
-        reflection[Dot11WEP].keyid = 0
-        reflection[Dot11WEP].wepdata = stream
-        reflection[Dot11WEP].icv = wepICV
+        reflection = reflection/Dot11WEP(iv = iVal, keyid = 0, wepdata = stream, icv = wepICV)
 
         return reflection
-        
-
-class Wpa(object):
-
-    def __init__(self):
-        self.shakeDict = {}
