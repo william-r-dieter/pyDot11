@@ -3,6 +3,7 @@
 import logging, sys
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from rc4 import rc4
+from binascii import *
 from scapy.all import *
 sys.path.append("../")
 from lib.crypto import Wep
@@ -37,7 +38,7 @@ if verbose == 'yes':
 
 ### Example of Encoding
 ## Encode the LLC layer via rc4
-stream, wepICV = wepCrypto.encoder(decodedPacket, iVal, keyText)
+stream, A, wepICV = wepCrypto.encoder(decodedPacket, iVal, keyText)
 if verbose == 'yes':
     print '\nencoder ran'
 
