@@ -38,7 +38,7 @@ if verbose == 'yes':
 
 ### Example of Encoding
 ## Encode the LLC layer via rc4
-stream, A, wepICV = wepCrypto.encoder(decodedPacket, iVal, keyText)
+stream, wepICV, hexCRC = wepCrypto.encoder(decodedPacket, iVal, keyText)
 if verbose == 'yes':
     print '\nencoder ran'
 

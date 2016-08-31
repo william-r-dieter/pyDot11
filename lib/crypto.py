@@ -67,15 +67,15 @@ class Wep(object):
         ## Calculate the WEP Integrity Check Value (ICV)
         ## Deal with negative crc
         #wepICV = crc32(str(pkt[LLC])) & 0xffffffff
-        A = crc32(hexstr(str(pkt[LLC]), onlyhex=1).replace(' ', '')) & 0xffffffff
-        print A
-        wepICV = unhexlify(hex(A).replace('0x', ''))
+        hexCRC = crc32(hexstr(str(pkt[LLC]), onlyhex=1).replace(' ', '')) & 0xffffffff
+#        print A
+        wepICV = unhexlify(hex(hexCRC).replace('0x', ''))
         plainText = str(pkt[LLC])
         stream = plainText + wepICV
         
         ## crypt
         seed = self.seedGen(iVal, unhexlify(keyText))
-        return rc4(stream, seed), wepICV, A
+        return rc4(stream, seed), hexCRC, wepICV
 
 
     def enBuilder(self, pkt, stream, iVal, wepICV):
