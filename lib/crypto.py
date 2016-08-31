@@ -65,7 +65,7 @@ class Wep(object):
 
     def encoder(self, pkt, iVal, keyText):
         ## Calculate the WEP Integrity Check Value (ICV)
-        ## Deal with nega
+        ## Deal with negative crc
         wepICV = crc32(str(pkt[LLC])) & 0xffffffff
         plainText = str(pkt[LLC])
         stream = plainText

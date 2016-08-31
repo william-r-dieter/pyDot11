@@ -1,0 +1,24 @@
+#!/usr/bin/python2.7
+
+from Cryptodome.Cipher import AES
+from Cryptodome.Random import get_random_bytes
+
+hdr = b'To your eyes only'
+plaintext = b'Attack at dawn'
+key = b'Sixteen byte key'
+nonce = hex(2131234)
+cipher = AES.new(key, AES.MODE_CCM, nonce)
+cipher.update(hdr)
+msg = cipher.nonce, hdr, cipher.encrypt(plaintext), cipher.digest()
+
+##We assume that the tuple ``msg`` is transmitted to the receiver:
+nonce, hdr, ciphertext, mac = msg
+key = b'Sixteen byte key'
+cipher = AES.new(key, AES.MODE_CCM, nonce)
+cipher.update(hdr)
+plaintext = cipher.decrypt(ciphertext)
+try:
+    cipher.verify(mac)
+    print "The message is authentic: hdr=%s, pt=%s" % (hdr, plaintext)
+except ValueError:
+    print "Key incorrect or message corrupted"

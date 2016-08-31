@@ -1,3 +1,6 @@
+## convert bytes(x) back to bin form for Scapy
+unhexlify(x)
+
 ## To obtain an understanding of how the WEP ICV should work
 RC4 of MPDU - 2619
 
@@ -44,6 +47,9 @@ Out[28]: '\xaa\x9e)\xbd'
 hexstr('\xaa\x9e)\xbd')
 Out[33]: 'aa 9e 29 bd  ..).'
 
+hex(int)
+int(hex(int), 16)
+
 from pyDot11 import *
 wepICMP = rdpcap('PCAPs/ICMPs/wep_pings.pcap')
 dec, iVal = wepDecrypt(wepICMP[1], keyText = '0123456789')
@@ -59,6 +65,8 @@ print 'repr of ^ is: ', repr(unhexlify(re.sub('0x', '', hex(wepICV))))
 stream = plainText + str(wepICV)
 stream = plainText + hex(wepICV)
 stream = plainText + unhexlify(re.sub('0x', '', hex(wepICV)))
+
+####>>>>>>>>  RC4 is only going to play with 
 
 
 
