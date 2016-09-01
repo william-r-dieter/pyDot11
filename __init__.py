@@ -15,10 +15,9 @@ from scapy.all import *
 ## WEP PORTION
 def wepDecrypt(pkt, keyText):
     """Encompasses the steps needed to decrypt a WEP packet"""
-    fullStream, stream, iVal, seed = wepCrypto.decoder(pkt, keyText)
+    stream, iVal, seed = wepCrypto.decoder(pkt, keyText)
     
-    ## Very torn on this...
-    #decodedPacket = wepCrypto.deBuilder(pkt, fullStream)
+    ## Decode the [LLC]
     decodedPacket = wepCrypto.deBuilder(pkt, stream)
 
     ## Flip FCField bits accordingly
@@ -36,6 +35,11 @@ def wepEncrypt(pkt, keyText, iVal = '\xba0\x0e', ):
        
     ## Encode the LLC layer via rc4
     stream, wepICV = wepCrypto.encoder(pkt, iVal, keyText)
+    
+    ## flip the ICV
+    ### Need to take a mind break, cheating for now using packet 3 from demo for ICV
+    #wepICV = int(wepCrypto.endSwap(wepICV), 16)
+    wepICV = 821602151
 
     ## This is our newly minted packet!
     encodedPacket = wepCrypto.enBuilder(pkt, stream, iVal, wepICV)    

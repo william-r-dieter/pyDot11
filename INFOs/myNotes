@@ -98,3 +98,14 @@ https://ins1gn1a.com/understanding-wpa-psk-cracking/
         HMAC(EVP_md5(), ptk[j], 16, ap->wpa.eapol, ap->wpa.eapol_size, mic[j], NULL);
     else
         HMAC(EVP_sha1(), ptk[j], 16, ap->wpa.eapol, ap->wpa.eapol_size, mic[j], NULL);
+
+        
+        
+## builtin ARC4
+In [108]: cipher = ARC4.new(seed + key)
+In [109]: cipher.encrypt('x')
+Out[109]: '\xdf'
+
+In [110]: cipher = ARC4.new(seed + key)
+In [111]: cipher.encrypt('x')
+Out[111]: '\xdf'

@@ -44,10 +44,6 @@ class Wep(object):
 
     def decoder(self, pkt, keyText):
         """Take a packet with [Dot11WEP] and apply RC4 to get the [LLC]
-        This function should not need to return fullStream,
-        however, because of quirks I've noticed, I return
-        fullStream and stream.
-        The seed doesn't need to be returned, but why calculate again...
         """
         ## Re-use the IV for comparative purposes
         iVal = pkt[Dot11WEP].iv
@@ -59,16 +55,16 @@ class Wep(object):
         ## Drop the 4 icv bytes
         stream = fullStream[0:-4]
         
-        ## Return the fullstream, stream and iv
-        return fullStream, stream, iVal, seed
+        ## Return the stream, iv and seed
+        return stream, iVal, seed
 
 
     def encoder(self, pkt, iVal, keyText):
         ## Calculate the WEP Integrity Check Value (ICV)
-        ## Deal with negative crc
-        wepICV = crc32(str(pkt[LLC])) & 0xffffffff
-        plainText = str(pkt[LLC])
-        stream = plainText
+        wepICV = self.endSwap(hex(crc32(str(pkt[LLC])) & 0xffffffff))
+        
+        ## Concatenate ICV to the [LLC]
+        stream = str(pkt[LLC]) + unhexlify(wepICV)
         
         ## crypt
         seed = self.seedGen(iVal, unhexlify(keyText))
@@ -83,13 +79,26 @@ class Wep(object):
         del reflection[LLC]
 
         ## Add the Dot11WEP layer
-        reflection = reflection/Dot11WEP()
-        reflection[Dot11WEP].iv = iVal
-        reflection[Dot11WEP].keyid = 0
-        reflection[Dot11WEP].wepdata = stream
-        reflection[Dot11WEP].icv = wepICV
+        reflection = reflection/Dot11WEP(iv = iVal, keyid = 0, wepdata = stream, icv = wepICV)
 
         return reflection
+
+
+    def endSwap(self, value):
+        """Expect hex format of '0x..."""
+        x = value.replace('0x', '')
+        start = 0
+        end = 2
+        swapList = []
+        for i in range(len(x)/2):
+            swapList.append(x[start:end])
+            start += 2
+            end += 2
+        swapList.reverse()
+        s = ''
+        for i in swapList:
+            s += i
+        return s
         
 
 class Wpa(object):
