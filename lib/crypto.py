@@ -1,5 +1,4 @@
-import re
-from binascii import crc32, hexlify, unhexlify
+from binascii import hexlify, unhexlify
 from rc4 import rc4
 from scapy.all import *
 
@@ -16,13 +15,13 @@ class Wep(object):
         
         ## 40-bit
         if keyLen == 5:
-            key = unhexlify(re.sub(' ', '', hexstr(keyText, onlyhex=1)))
+            key = unhexlify(hexstr(keyText, onlyhex=1).replace(' ', ''))
         elif keyLen == 10:
             key = unhexlify(keyText)
         
         ## 104-bit
         if keyLen == 13:
-            key = unhexlify(re.sub(' ', '', hexstr(keyText, onlyhex=1)))
+            key = unhexlify(hexstr(keyText, onlyhex=1).replace(' ', ''))
         elif keyLen == 26:
             key = unhexlify(keyText)
             
@@ -68,10 +67,10 @@ class Wep(object):
         
         ## crypt
         seed = self.seedGen(iVal, unhexlify(keyText))
-        return rc4(stream, seed), wepICV
+        return rc4(stream, seed)
 
 
-    def enBuilder(self, pkt, stream, iVal, wepICV):
+    def enBuilder(self, pkt, stream, iVal):
         ## Mirror the packet
         reflection = pkt.copy()
 
@@ -79,8 +78,7 @@ class Wep(object):
         del reflection[LLC]
 
         ## Add the Dot11WEP layer
-        reflection = reflection/Dot11WEP(iv = iVal, keyid = 0, wepdata = stream, icv = wepICV)
-
+        reflection = reflection/Dot11WEP(iv = iVal, keyid = 0, wepdata = stream)
         return reflection
 
 

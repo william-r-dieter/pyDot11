@@ -109,3 +109,19 @@ Out[109]: '\xdf'
 In [110]: cipher = ARC4.new(seed + key)
 In [111]: cipher.encrypt('x')
 Out[111]: '\xdf'
+
+
+
+
+
+### () this slicer up!
+x = encPkts[3].copy()
+del x[Dot11WEP].icv
+for i in range(len(str(x)[0:-4])):
+    #print 'iteration %s' % i
+    t = hex(crc32(str(x)[i:-4]) & 0xffffffff)
+    if t == '0x30f8a767':
+        print i
+    if t == '0x67a7f830':
+        print i
+    print ''

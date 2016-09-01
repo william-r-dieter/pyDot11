@@ -5,7 +5,6 @@ import logging, sys
 ### Transfer to Wpa Class
 import hmac, hashlib, binascii, sha
 
-
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from .lib.crypto import Wep, Wpa
 from pbkdf2 import PBKDF2
@@ -34,22 +33,19 @@ def wepEncrypt(pkt, keyText, iVal = '\xba0\x0e', ):
     pkt = pkt.copy()
        
     ## Encode the LLC layer via rc4
-    stream, wepICV = wepCrypto.encoder(pkt, iVal, keyText)
+    stream = wepCrypto.encoder(pkt, iVal, keyText)
     
-    ## flip the ICV
-    ### Need to take a mind break, cheating for now using packet 3 from demo for ICV
-    #wepICV = int(wepCrypto.endSwap(wepICV), 16)
-    wepICV = 821602151
-
-    ## This is our newly minted packet!
-    encodedPacket = wepCrypto.enBuilder(pkt, stream, iVal, wepICV)    
-
+    ## Build the packet minus the FCS
+    encodedPacket = wepCrypto.enBuilder(pkt, stream, iVal)
+    
     ## Flip FCField bits accordingly
     if encodedPacket[Dot11].FCfield == 1L:
         encodedPacket[Dot11].FCfield = 65L
     elif encodedPacket[Dot11].FCfield == 2L:
         encodedPacket[Dot11].FCfield = 66L
-
+    
+    ## This is our newly minted packet!
+    encodedPacket[Dot11WEP].icv = int(wepCrypto.endSwap(hex(crc32(str(encodedPacket[Dot11])[0:-4]) & 0xffffffff)), 16)
     return encodedPacket
 
 
