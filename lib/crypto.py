@@ -1,14 +1,10 @@
-from binascii import hexlify, unhexlify
+from binascii import unhexlify
 from rc4 import rc4
 from scapy.all import *
 
 class Wep(object):
     """All things WEP related"""
 
-    def __init__(self):
-        pass
-    
-    
     def seedGen(self, iv, keyText):
         """Currently works with 40-bit and 104-bit"""
         keyLen = len(keyText)
@@ -42,8 +38,7 @@ class Wep(object):
 
 
     def decoder(self, pkt, keyText):
-        """Take a packet with [Dot11WEP] and apply RC4 to get the [LLC]
-        """
+        """Take a packet with [Dot11WEP] and apply RC4 to get the [LLC]"""
         ## Re-use the IV for comparative purposes
         iVal = pkt[Dot11WEP].iv
         seed = self.seedGen(iVal, keyText)
@@ -63,7 +58,7 @@ class Wep(object):
         wepICV = self.endSwap(hex(crc32(str(pkt[LLC])) & 0xffffffff))
         
         ## Concatenate ICV to the [LLC]
-        stream = str(pkt[LLC]) + unhexlify(wepICV)
+        stream = str(pkt[LLC]) + unhexlify(wepICV.replace('0x', ''))
         
         ## crypt
         seed = self.seedGen(iVal, unhexlify(keyText))
@@ -83,19 +78,40 @@ class Wep(object):
 
 
     def endSwap(self, value):
-        """Expect hex format of '0x..."""
-        x = value.replace('0x', '')
+        """Takes an object and reverse Endians the bytes
+
+        Useful for crc32 within 802.11:
+        Autodetection logic built in for the following situations:
+        Will take the stryng '0xaabbcc' and return string '0xccbbaa'
+        Will take the integer 12345 and return integer 14640
+        Will take the bytestream string of 'aabbcc' and return string 'ccbbaa'
+        """
+        try:
+            value = hex(value).replace('0x', '')
+            sType = 'int'
+        except:
+            if '0x' in value:
+                sType = 'hStr'
+            else:
+                sType = 'bStr'
+            value = value.replace('0x', '')
+            
         start = 0
         end = 2
         swapList = []
-        for i in range(len(x)/2):
-            swapList.append(x[start:end])
+        for i in range(len(value)/2):
+            swapList.append(value[start:end])
             start += 2
             end += 2
         swapList.reverse()
         s = ''
         for i in swapList:
             s += i
+        
+        if sType == 'int':
+            s = int(s, 16)
+        elif sType == 'hStr':
+            s = '0x' + s
         return s
         
 

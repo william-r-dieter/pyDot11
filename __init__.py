@@ -1,15 +1,16 @@
 # Copyright (C) 2016 stryngs
 
-import logging, sys
-
 ### Transfer to Wpa Class
 import hmac, hashlib, binascii, sha
-
-logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
-from .lib.crypto import Wep, Wpa
 from pbkdf2 import PBKDF2
+
+import logging
+logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from rc4 import rc4
 from scapy.all import *
+from .lib.crypto import Wep, Wpa
+
+
 
 ## WEP PORTION
 def wepDecrypt(pkt, keyText):
@@ -44,19 +45,22 @@ def wepEncrypt(pkt, keyText, iVal = '\xba0\x0e', ):
     elif encodedPacket[Dot11].FCfield == 2L:
         encodedPacket[Dot11].FCfield = 66L
     
-    ## This is our newly minted packet!
-    encodedPacket[Dot11WEP].icv = int(wepCrypto.endSwap(hex(crc32(str(encodedPacket[Dot11])[0:-4]) & 0xffffffff)), 16)
+    ## Add the ICV
+    encodedPacket[Dot11WEP].icv = int(wepCrypto.endSwap(hex(crc32(str(\
+        encodedPacket[Dot11])[0:-4]) & 0xffffffff)), 16)
+
     return encodedPacket
 
 
 
 ## WPA PORTION
-### Most of this will be classed
+### Most of this will be classed in crypto.py
 def eapolGrab():
     """Grab the EAPOL
     Needs logic in case of multiple auth at one
     """
-    pkts = sniff(iface = 'wlan0mon', lfilter = lambda p: p.haslayer(EAPOL) and p.type == 2, count = 4)
+    pkts = sniff(iface = 'wlan0mon', lfilter = lambda p: p.haslayer(EAPOL) \
+        and p.type == 2, count = 4)
     vMAC = pkts[0][Dot11].addr1
     bMAC = pkts[0][Dot11].addr2
     eapolCapture = wpaCrypto.shakeDict[vMAC] = {}

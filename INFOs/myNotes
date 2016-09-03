@@ -1,9 +1,6 @@
 ## convert bytes(x) back to bin form for Scapy
 unhexlify(x)
 
-## To obtain an understanding of how the WEP ICV should work
-RC4 of MPDU - 2619
-
 
 ## PCAPs details
 to-DS:       1L
@@ -27,68 +24,6 @@ IV   -- Initialization Vector
 MPDU -- Medium Access Control (MAC) Protocol Data Unit
 
 
-## Bit flipping
-use 66L to play with LAN
-
-
-## Checksum
-Delete the chksum and then:
-    pkt = pkt.__class__(str(pkt))
-    
-
-## Do i need to recreate pkt from top down first? X()/Y()/Z()/etc....?
-
-## icv fun
-icv=2862492093
-hex(2862492093)
-Out[27]: '0xaa9e29bd'  <-- int('0xaa9e29bd', 16) reverses <-- 0x is optional
-unhexlify('aa9e29bd')
-Out[28]: '\xaa\x9e)\xbd'
-hexstr('\xaa\x9e)\xbd')
-Out[33]: 'aa 9e 29 bd  ..).'
-
-hex(int)
-int(hex(int), 16)
-
-from pyDot11 import *
-wepICMP = rdpcap('PCAPs/ICMPs/wep_pings.pcap')
-dec, iVal = wepDecrypt(wepICMP[1], keyText = '0123456789')
-enc = wepICMP[1]
-encICV = enc[Dot11WEP].wepdata[-4:]
-encICVnum = enc[Dot11WEP].icv
-decICV = dec[ICMP][Padding].load
-
-print 'wepICV is: ', wepICV
-print 'hex of ^ is: ', hex(wepICV)
-print 'unhexlify of ^ is: ', unhexlify(re.sub('0x', '', hex(wepICV)))
-print 'repr of ^ is: ', repr(unhexlify(re.sub('0x', '', hex(wepICV))))
-stream = plainText + str(wepICV)
-stream = plainText + hex(wepICV)
-stream = plainText + unhexlify(re.sub('0x', '', hex(wepICV)))
-
-####>>>>>>>>  RC4 is only going to play with 
-
-
-
-
-## Trying to build a packet from scratch and encode it
-pingr = IP(dst="192.168.100.148", src="192.168.100.136")/ICMP()
-wifiBody = wepICMP[1].copy()
-del wifiBody[Dot11WEP]
-wifiHeader = wifiBody.copy()
-wifiMiddle = openICMP[1][LLC].copy()
-del wifiMiddle[IP]
-wifiEnd = pingr.copy()
-wifiMiddle = wifiMiddle/IP(str(wifiEnd))
-wifiHeader[Dot11].FCfield = 2L
-wifiHeader = wifiHeader/LLC(str(wifiMiddle))
-wifiHeader = wifiHeader.__class__(str(wifiHeader))
-pkt = wepEncrypt(wifiHeader)
-
-### I think the padding is perhaps something......
-    ### Play with rc4 and xx xx xx xx yy yy yy yy on last bytes.  y* should be x* via rc4
-
-
 ## Useful wpa knowledge
 https://ins1gn1a.com/understanding-wpa-psk-cracking/
 
@@ -98,21 +33,6 @@ https://ins1gn1a.com/understanding-wpa-psk-cracking/
         HMAC(EVP_md5(), ptk[j], 16, ap->wpa.eapol, ap->wpa.eapol_size, mic[j], NULL);
     else
         HMAC(EVP_sha1(), ptk[j], 16, ap->wpa.eapol, ap->wpa.eapol_size, mic[j], NULL);
-
-        
-        
-## builtin ARC4
-In [108]: cipher = ARC4.new(seed + key)
-In [109]: cipher.encrypt('x')
-Out[109]: '\xdf'
-
-In [110]: cipher = ARC4.new(seed + key)
-In [111]: cipher.encrypt('x')
-Out[111]: '\xdf'
-
-
-
-
 
 ### () this slicer up!
 x = encPkts[3].copy()
