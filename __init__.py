@@ -9,7 +9,7 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from rc4 import rc4
 from scapy.all import *
 from .lib.crypto import Wep, Wpa
-
+from .lib.nic import Tap
 
 
 ## WEP PORTION
@@ -97,3 +97,5 @@ def PRF512(key, A, B):
 ### Instantiations
 wepCrypto = Wep()
 wpaCrypto = Wpa()
+dev = Tap()
+subprocess.check_call('ifconfig tap0 up', shell = True)
