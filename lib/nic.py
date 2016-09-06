@@ -14,6 +14,7 @@ class Tap(object):
         fcntl.ioctl(self.nic, 0x400454ca, struct.pack("16sH", self.tapName, 2))
 
 
-    def send(self, pkt):
-        """Send the packet in str format"""
-        os.write(self.nic, '\x00\x00\x00\x00' + pkt)
+    ### Not really needed
+    #def send(self, pkt):
+        #"""Send the packet in str format"""
+        #os.write(self.nic, '\x00\x00\x00\x00' + pkt)

@@ -1,0 +1,51 @@
+#!/usr/bin/python2.7
+
+import argparse
+from pyDot11 import *
+
+def packetParse(args):
+    def engine(packet):
+
+        try:
+            ## Verify tgt BSSID
+            ## Deal only with traffic leaving or going into LAN, not lan2lan
+            ## Exclude IPv6
+            if not packet.haslayer(IPv6) and packet[Dot11].addr3 == args.b:
+
+                ## Decrypt
+                decPkt, iv = wepDecrypt(packet, args.p)
+                
+                ## Deal with to-ds
+                if packet[Dot11].FCfield == 65L:
+                    sendp(Ether(src = packet[Dot11].addr2, dst = packet[Dot11].addr3, type = 0x800)/decPkt[IP], iface = 'tap0')
+                    print 'to-ds:'
+                    print 'src:', packet[Dot11].addr2
+                    print 'dst:', packet[Dot11].addr3
+                
+                ## Deal with from-ds
+                elif packet[Dot11].FCfield == 66L:
+                    sendp(Ether(src = packet[Dot11].addr3, dst = packet[Dot11].addr1, type = 0x800)/decPkt[IP], iface = 'tap0')
+                    print 'from-ds:'
+                    print 'src:', packet[Dot11].addr3
+                    print 'dst:', packet[Dot11].addr1
+        except:
+            pass
+    return engine
+
+
+def main(args):
+    dev = Tap()
+    subprocess.check_call('ifconfig tap0 up', shell = True)
+    packetParser = packetParse(args)
+    sniff(iface = 'wlan0mon', prn = packetParser)
+
+if __name__ == '__main__':
+    ## ARGUMENT PARSING
+    parser = argparse.ArgumentParser(description = 'pyDot11 - Encrypt and Decrypt 802.11 on-the-fly')
+
+    parser.add_argument('-n', metavar = '<dev number>', help = 'Device number for Tap interface')
+    parser.add_argument('-b', metavar = '<tgt BSSID>', required = True, help = 'Target BSSID')
+    parser.add_argument('-p', metavar = '<Passphrase>', required = True, help = 'Target BSSID')
+
+    args = parser.parse_args()
+    main(args)

@@ -97,5 +97,3 @@ def PRF512(key, A, B):
 ### Instantiations
 wepCrypto = Wep()
 wpaCrypto = Wpa()
-dev = Tap()
-subprocess.check_call('ifconfig tap0 up', shell = True)

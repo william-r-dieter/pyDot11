@@ -18,6 +18,16 @@ router    -- ce:e1:d5:00:13:9a (192.168.100.1)
 sender    -- 4e:40:cd:16:5a:1d (192.168.100.136)
 receiver  -- c4:d9:87:e4:62:5e (192.168.100.148)
 
+To DS Set:
+Address 1: BSSID
+Address 2: Source
+Address 3: Destination
+
+From DS Set:
+Address 1: Destination
+Address 2: BSSID
+Address 3: Source
+
 
 ## Definitions
 IV   -- Initialization Vector
