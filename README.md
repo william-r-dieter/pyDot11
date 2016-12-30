@@ -21,3 +21,7 @@ openPkts[1].summary()
 input = openPkts[1].__class__(str(openPkts[1])[0:-4])
 encPkt = wepEncrypt(input, '0123456789')
 encPkt.summary()
+
+# Example of decrypting a pcap file
+decList = pcap.crypt2plain('PCAPs/ICMPs/wep_pings.pcap', '0123456789')
+
