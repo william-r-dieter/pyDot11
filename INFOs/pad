@@ -19,14 +19,15 @@ def xPRF512(key, A, B):
     return R[:blen]
 
 ssid = 'wpa2-aes'
+pcap = 'wpa2-aes.pcap'
 passphrase = 'password'
-vMac = rdpcap('../PCAPs/EAPOLs/%s.pcap' % ssid) 
+vMac = rdpcap('../PCAPs/EAPOLs/%s' % pcap) 
 one = vMac[1]
 two = vMac[2]
 ap_mac = binascii.a2b_hex(re.sub(':', '', two[Dot11].addr1))
 s_mac = binascii.a2b_hex(re.sub(':', '', one[Dot11].addr1))
-anonce = binascii.a2b_hex(re.sub(' ', '', hexstr(str(one), onlyhex = 1)[267:362]))
-snonce = binascii.a2b_hex(re.sub(' ', '', hexstr(str(two), onlyhex = 1)[267:362]))
+anonce = binascii.a2b_hex(re.sub(' ', '', hexstr(one.load, onlyhex = 1)[39:134]))
+snonce = binascii.a2b_hex(re.sub(' ', '', hexstr(two.load, onlyhex = 1)[39:134]))
 
 pke = "Pairwise key expansion"  
 pmk = PBKDF2(passphrase, ssid, 4096).read(32)
