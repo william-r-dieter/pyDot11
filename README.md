@@ -1,6 +1,6 @@
 # pyDot11
 
-### pip install pyDot11-0.1.tar.gz
+### pip install pyDot11-0.5.tar.gz
 
 ````python
 # Example of grabbing an encrypted packet, decrypting it, and then replaying it
