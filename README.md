@@ -1,7 +1,17 @@
 # pyDot11
 
-### pip install pyDot11-0.5.tar.gz
+## pyDot11 currently supports the following:
+Decryption of WPA</br>
+Decryption of WEP</br>
+Encryption of WEP
+</br></br>
+### To get started: 
+````bash
+pip install pyDot11-0.5.tar.gz
+python pyDot11 --help
+````
 
+### Various examples of other things you can do with pyDot11
 ````python
 # Example of grabbing an encrypted packet, decrypting it, and then replaying it
 from pyDot11 import *
