@@ -13,7 +13,7 @@ python pyDot11 --help
 
 ### Various examples of other things you can do with pyDot11
 ````python
-# Example of grabbing an encrypted packet, decrypting it, and then replaying it
+## Example of grabbing an encrypted packet, decrypting it, and then replaying it
 from pyDot11 import *
 encPkts = rdpcap('PCAPs/ICMPs/wep_pings.pcap')
 encPkts[1].summary()
@@ -27,7 +27,7 @@ encPkt == encPkts[1]
 ````
 
 ````python
-# Example of taking a packet from Open Wifi, and then encrypting it
+## Example of taking a packet from Open Wifi, and then encrypting it
 from pyDot11 import *
 openPkts = rdpcap('PCAPs/ICMPs/open_pings.pcap')
 openPkts[1].summary()
@@ -37,7 +37,7 @@ encPkt.summary()
 ````
 
 ````python
-# Example of decrypting a pcap file
+## Example of decrypting a pcap file
 from pyDot11 import *
 decList = pcap.crypt2plain('PCAPs/ICMPs/wep_pings.pcap', '0123456789')
 ````
