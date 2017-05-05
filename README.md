@@ -7,14 +7,12 @@ Encryption of WEP
 </br></br>
 ### Prerequisites:
 pyDot11 was built around scapy2.3.3 from PyPI.  Support and/or advice about pyDot11 requires the user have this version on their system.  For your convience, a local copy of scapy has been included in RESOURCEs/.  If you don't have scapy, or have a different version of scapy on your system, then feel free to use the locally included .tgz.  Directions for getting the local version up and running are as follows:
-</br>
 ````bash
 ## From the pyDot11 folder run the following
 tar zxf RESOURCEs/scapy-2.3.3.tgz
 mv scapy-2.3.3/scapy/ .
 rm -rf scapy-2.3.3/
 ````
-</br>
 ### To get started: 
 ````bash
 pip install pyDot11-0.5.2.tar.gz
