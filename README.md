@@ -14,7 +14,7 @@ tar zxf RESOURCEs/scapy-2.3.3.tgz
 mv scapy-2.3.3/scapy/ .
 rm -rf scapy-2.3.3/
 ````
-</br></br>
+</br>
 ### To get started: 
 ````bash
 pip install pyDot11-0.5.2.tar.gz
