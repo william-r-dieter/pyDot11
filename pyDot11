@@ -1,6 +1,10 @@
 #!/usr/bin/python2.7
 
-import argparse
+import argparse, subprocess
+from scapy.sendrecv import sniff
+from scapy.layers.inet import IP
+from scapy.sendrecv import sendp, sniff
+from scapy.layers.l2 import Ether, EAPOL
 from pyDot11 import *
 
 def fromDecrypt(packet, args, *cryptoList):
