@@ -19,7 +19,11 @@ rm -rf scapy-2.3.3/
 pip install pyDot11-0.5.6.tar.gz
 python pyDot11 --help
 ````
-
+### Need help grabbing an EAPOL?
+````bash
+## From the pyDot11 folder run the following
+python airpunt --help
+````
 ### Various examples of other things you can do with pyDot11
 ````python
 ## Example of grabbing an encrypted packet, decrypting it, and then replaying it
