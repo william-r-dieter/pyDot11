@@ -16,7 +16,7 @@ rm -rf scapy-2.3.3/
 ### To get started: 
 ````bash
 ## From the pyDot11 folder run the following
-pip install pyDot11-0.5.6.tar.gz
+pip install pyDot11-0.5.8.tar.gz
 python pyDot11 --help
 ````
 ### Need help grabbing an EAPOL?
