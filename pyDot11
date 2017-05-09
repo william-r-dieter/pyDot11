@@ -1,11 +1,6 @@
 #!/usr/bin/python2.7
 
 import argparse, subprocess, sys
-
-## DEBUG for pypy
-#sys.path.append('/usr/local/lib/python2.7/dist-packages')
-#sys.path.append('/usr/lib/python2.7/dist-packages')
-
 from scapy.sendrecv import sniff
 from scapy.layers.inet import IP
 from scapy.sendrecv import sendp, sniff
