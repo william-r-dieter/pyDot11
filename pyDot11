@@ -1,11 +1,6 @@
 #!/usr/bin/python2.7
 
-import argparse, subprocess, sys
-from scapy.sendrecv import sniff
-from scapy.layers.inet import IP
-from scapy.sendrecv import sendp, sniff
-from scapy.layers.l2 import Ether, EAPOL
-from pyDot11 import *
+import argparse, os, subprocess, sys
 
 def fromDecrypt(packet, args, *cryptoList):
     """Encompass steps for From-DS decrypt"""
@@ -211,14 +206,18 @@ if __name__ == '__main__':
     parser.add_argument('-d',
                         choices = ['both', 'from', 'to'],
                         metavar = '<Direction>',
-                        help = 'Direction [Default: to]')
+                        help = 'Direction -------------------- [Default: to]')
     parser.add_argument('-e',
                         metavar = '<tgt ESSID>',
                         help = 'Target ESSID -------------- required for wpa')
     parser.add_argument('-i',
-                        metavar = '<Monitor Mode NIC',
+                        metavar = '<Sniffing NIC>',
                         required = True,
                         help = 'NIC to sniff with ----------------- required')
+    parser.add_argument('-m',
+                        choices = ['python', 'pypy'],
+                        metavar = '<Op  Mode>',
+                        help = 'Interpreter selection ---- [Default: python]')
     parser.add_argument('-n',
                         metavar = '<dev number>',
                         help = 'Device number for Tap interface [Default: 0]')
@@ -233,4 +232,16 @@ if __name__ == '__main__':
                         help = 'Encryption type ------------------- required')
 
     args = parser.parse_args()
+    
+    ## Paths and imports
+    if args.m == 'pypy':
+        pwd = os.getcwd()
+        sys.path.append(pwd + '/_PYPY')
+        sys.path.append(pwd + '/_PYPY/pyDot11')
+    from scapy.sendrecv import sniff
+    from scapy.layers.inet import IP
+    from scapy.sendrecv import sendp, sniff
+    from scapy.layers.l2 import Ether, EAPOL
+    from pyDot11 import *
+    
     main(args)
