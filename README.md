@@ -6,7 +6,7 @@ Decryption of WEP</br>
 Encryption of WEP
 </br></br>
 ### Prerequisites:
-pyDot11 has requirements that require planning before usage.  The easiest way to deal with those is first ask the user, which interpreter they want to use.  As you know, Python is an interpreted language, and as such can be slower than a compiled language.  A workaround to this is to use something like PyPy.  There are many paths which lead to the same goal, but in the attempt at keeping things simple, only two setups will be supported.
+pyDot11 has requirements that require planning before usage.  The easiest way to deal with those is first ask the user, which interpreter they want to use.  As you know, Python is an interpreted language, and as such can be slower than a compiled language.  A workaround to this is to use something like PyPy.  There are many paths which lead to the same goal, but in the attempt at keeping things simple, only two setups will be supported.  Initial testing shows that PyPy slows down some aspects and speeds up other aspects of pyDot11.  It is not recommended to attempt pyDot11 usage with PyPy at this time, but the option is still available if you wish.
 <br><br>
 It is essential to note before moving on that pyDot11 was built around scapy2.3.3 from PyPI.  Support and/or advice about pyDot11 requires the user have this version on their system.  If you don't have scapy, or have a different version of scapy on your system, then feel free to use the locally included module.
 <br><br>
@@ -26,7 +26,7 @@ tar zxf RESOURCEs/scapy-2.3.3.tgz
 mv scapy-2.3.3/scapy/ .
 rm -rf scapy-2.3.3/
 ````
-<br>
+<br><br>
 Setup #2 - PyPy
 
 While using something such as virtualenv would achieve the desired outcome, the logic for avoiding the need has been baked into pyDot11 by modifying sys.path and uing _PYPY as the parent folder for the PyPy modules.  Of the modules needed, pycryptodomex requires compilation by pypy itself.  Every other module can simply be installed to the _PYPY folder.  Directions are as such:
