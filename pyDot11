@@ -4,6 +4,10 @@ import argparse, os, subprocess, sys
 
 def fromDecrypt(packet, args, *cryptoList):
     """Encompass steps for From-DS decrypt"""
+    ## DEBUG
+    #if args.v:
+        #startDecrypt = time.time()
+
     if args.t == 'wep':
         decPkt, iv = wepDecrypt(packet, args.p)
     else:
@@ -14,6 +18,11 @@ def fromDecrypt(packet, args, *cryptoList):
         else:
             tgtPkt, decrypted = cryptoList[3].decrypt(packet, tk)
             decPkt = cryptoList[4].deBuilder(tgtPkt, decrypted)
+
+    ## DEBUG
+    #if args.v:
+        #endDecrypt = time.time()
+
     if decPkt.haslayer(IP):
         sendp(Ether(src = packet[Dot11].addr3,
                     dst = packet[Dot11].addr1,
@@ -21,9 +30,20 @@ def fromDecrypt(packet, args, *cryptoList):
         iface = 'tap{0}'.format(args.n),
         verbose = 0)
 
+        ## DEBUG
+        #if args.v:
+            #endSend = time.time()
+            #print 'Decryption time:    %s' % str(endDecrypt - startDecrypt)
+            #print 'Time to sendp():    %s' % str(endSend - endDecrypt)
+            #print 'pyDot11 total time: %s\n' % str(endSend - startDecrypt)
+
 
 def toDecrypt(packet, args, *cryptoList):
     """Encompass steps for To-DS decrypt"""
+    ## DEBUG
+    #if args.v:
+        #startDecrypt = time.time()
+
     if args.t == 'wep':
         decPkt, iv = wepDecrypt(packet, args.p)
     else:
@@ -34,12 +54,29 @@ def toDecrypt(packet, args, *cryptoList):
         else:
             tgtPkt, decrypted = cryptoList[3].decrypt(packet, tk)
             decPkt = cryptoList[4].deBuilder(tgtPkt, decrypted)
+
+    ## DEBUG
+    #if args.v:
+        #endDecrypt = time.time()
+
     if decPkt.haslayer(IP):
+        
+        ## DEBUG
+        #if args.v:
+            #startSend = time.time()
+
         sendp(Ether(src = packet[Dot11].addr2,
                     dst = packet[Dot11].addr3,
                     type = 0x800)/decPkt[IP],
         iface = 'tap{0}'.format(args.n),
         verbose = 0)
+        
+        ##DEBUG
+        #if args.v:
+            #endSend = time.time()
+            #print 'Decryption time:    %s' % str(endDecrypt - startDecrypt)
+            #print 'Time to sendp():    %s' % str(endSend - endDecrypt)
+            #print 'pyDot11 total time: %s\n' % str(endSend - startDecrypt)
 
 
 def pktFilter(packet):
@@ -47,7 +84,7 @@ def pktFilter(packet):
     if packet[Dot11].type == 2 and\
        packet.haslayer(Dot11WEP) and\
        (packet[Dot11].FCfield == 65l or packet[Dot11].FCfield == 66L):
-       return True
+        return True
     else:
         return False
 
@@ -57,7 +94,7 @@ def wepParser(args):
 
         ## Verify we care
         if pktFilter(packet):
-
+            
             ## Both ways From-DS
             if args.d == 'both' and packet[Dot11].addr2 == args.b.lower():
                 fromDecrypt(packet, args)
@@ -80,7 +117,6 @@ def wepParser(args):
 ### Need to verify chksums and src/dst for Ether()
 def wpaParser(args, shake, ccmp, ccmpBlah, tkip, tkipBlah):
     def engine(packet):
-        global x, y
         try:
             if packet.haslayer(EAPOL):
                 shake.eapolGrab(packet)
@@ -214,13 +250,13 @@ if __name__ == '__main__':
                         metavar = '<Sniffing NIC>',
                         required = True,
                         help = 'NIC to sniff with ----------------- required')
-    parser.add_argument('-m',
-                        choices = ['python', 'pypy'],
-                        metavar = '<Op  Mode>',
-                        help = 'Interpreter selection ---- [Default: python]')
     parser.add_argument('-n',
                         metavar = '<dev number>',
                         help = 'Device number for Tap interface [Default: 0]')
+    parser.add_argument('-o',
+                        choices = ['python', 'pypy'],
+                        metavar = '<Operation  Mode>',
+                        help = 'Interpreter selection ---- [Default: python]')
     parser.add_argument('-p',
                         metavar = '<Passphrase>',
                         required = True,
@@ -230,11 +266,15 @@ if __name__ == '__main__':
                         metavar = '<Encryption type>',
                         required = True,
                         help = 'Encryption type ------------------- required')
+    ## DEBUG
+    #parser.add_argument('-v',
+                        #action = 'store_true',
+                        #help = 'Verbose timing statistics ----[Default: off]')
 
     args = parser.parse_args()
     
     ## Paths and imports
-    if args.m == 'pypy':
+    if args.o == 'pypy':
         pwd = os.getcwd()
         sys.path.append(pwd + '/_PYPY')
         sys.path.append(pwd + '/_PYPY/pyDot11')
