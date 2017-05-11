@@ -26,7 +26,7 @@ tar zxf RESOURCEs/scapy-2.3.3.tgz
 mv scapy-2.3.3/scapy/ .
 rm -rf scapy-2.3.3/
 ````
-<br><br>
+<br>
 Setup #2 - PyPy
 
 While using something such as virtualenv would achieve the desired outcome, the logic for avoiding the need has been baked into pyDot11 by modifying sys.path and uing _PYPY as the parent folder for the PyPy modules.  Of the modules needed, pycryptodomex requires compilation by pypy itself.  Every other module can simply be installed to the _PYPY folder.  Directions are as such:
