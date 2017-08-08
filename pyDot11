@@ -4,38 +4,23 @@ import argparse, os, subprocess, sys
 
 def fromDecrypt(packet, args, *cryptoList):
     """Encompass steps for From-DS decrypt"""
-    ## DEBUG
-    #if args.v:
-        #startDecrypt = time.time()
-
     if args.t == 'wep':
-        decPkt, iv = wepDecrypt(packet, args.p)
+        decodedPkt, iv = wepDecrypt(packet, args.p, False)
     else:
-        tk = cryptoList[0].tgtInfo.get(cryptoList[5])
-        if cryptoList[0].encDict.get(cryptoList[5]) == 'ccmp':
-            tgtPkt, decrypted = cryptoList[1].decrypt(packet, tk)
-            decPkt = cryptoList[2].deBuilder(tgtPkt, decrypted)
+        tk = cryptoList[0].tgtInfo.get(cryptoList[3])[0]
+        encKey = cryptoList[0].tgtInfo.get(cryptoList[3])[1]
+        if cryptoList[0].encDict.get(cryptoList[3]) == 'ccmp':
+            origPkt, decodedPkt, PN = wpaDecrypt(encKey, packet, 'ccmp')
         else:
-            tgtPkt, decrypted = cryptoList[3].decrypt(packet, tk)
-            decPkt = cryptoList[4].deBuilder(tgtPkt, decrypted)
+            origPkt, decodedPkt, PN = wpaDecrypt(tk, packet, 'tkip')
 
-    ## DEBUG
-    #if args.v:
-        #endDecrypt = time.time()
-
-    if decPkt.haslayer(IP):
+    ### Debate on changing this so we push all?
+    if decodedPkt.haslayer(IP):
         sendp(Ether(src = packet[Dot11].addr3,
                     dst = packet[Dot11].addr1,
-                    type = 0x800)/decPkt[IP],
+                    type = 0x800)/decodedPkt[IP],
         iface = 'tap{0}'.format(args.n),
         verbose = 0)
-
-        ## DEBUG
-        #if args.v:
-            #endSend = time.time()
-            #print 'Decryption time:    %s' % str(endDecrypt - startDecrypt)
-            #print 'Time to sendp():    %s' % str(endSend - endDecrypt)
-            #print 'pyDot11 total time: %s\n' % str(endSend - startDecrypt)
 
 
 def toDecrypt(packet, args, *cryptoList):
@@ -45,39 +30,23 @@ def toDecrypt(packet, args, *cryptoList):
         #startDecrypt = time.time()
 
     if args.t == 'wep':
-        decPkt, iv = wepDecrypt(packet, args.p)
+        decodedPkt, iv = wepDecrypt(packet, args.p, False)
     else:
-        tk = cryptoList[0].tgtInfo.get(cryptoList[5])
-        if cryptoList[0].encDict.get(cryptoList[5]) == 'ccmp':
-            tgtPkt, decrypted = cryptoList[1].decrypt(packet, tk)
-            decPkt = cryptoList[2].deBuilder(tgtPkt, decrypted)
+        tk = cryptoList[0].tgtInfo.get(cryptoList[3])[0]
+        encKey = cryptoList[0].tgtInfo.get(cryptoList[3])[1]
+        if cryptoList[0].encDict.get(cryptoList[3]) == 'ccmp':
+            origPkt, decodedPkt, PN = wpaDecrypt(encKey, packet, 'ccmp')
         else:
-            tgtPkt, decrypted = cryptoList[3].decrypt(packet, tk)
-            decPkt = cryptoList[4].deBuilder(tgtPkt, decrypted)
+            origPkt, decodedPkt, PN = wpaDecrypt(tk, packet, 'tkip')
 
-    ## DEBUG
-    #if args.v:
-        #endDecrypt = time.time()
-
-    if decPkt.haslayer(IP):
-        
-        ## DEBUG
-        #if args.v:
-            #startSend = time.time()
-
+    ### Debate on changing this so we push all?
+    if decodedPkt.haslayer(IP):
         sendp(Ether(src = packet[Dot11].addr2,
                     dst = packet[Dot11].addr3,
-                    type = 0x800)/decPkt[IP],
+                    type = 0x800)/decodedPkt[IP],
         iface = 'tap{0}'.format(args.n),
         verbose = 0)
         
-        ##DEBUG
-        #if args.v:
-            #endSend = time.time()
-            #print 'Decryption time:    %s' % str(endDecrypt - startDecrypt)
-            #print 'Time to sendp():    %s' % str(endSend - endDecrypt)
-            #print 'pyDot11 total time: %s\n' % str(endSend - startDecrypt)
-
 
 def pktFilter(packet):
     """ Verify it is an encrypted data packet"""
@@ -115,7 +84,7 @@ def wepParser(args):
 
 
 ### Need to verify chksums and src/dst for Ether()
-def wpaParser(args, shake, ccmp, ccmpBlah, tkip, tkipBlah):
+def wpaParser(args, shake, ccmp, tkip):
     def engine(packet):
         try:
             if packet.haslayer(EAPOL):
@@ -141,19 +110,19 @@ def wpaParser(args, shake, ccmp, ccmpBlah, tkip, tkipBlah):
 
                     ## Both ways From-DS
                     if args.d == 'both' and packet[Dot11].addr2 == args.b.lower():
-                        fromDecrypt(packet, args, shake, ccmp, ccmpBlah, tkip, tkipBlah, tgtMAC)
+                        fromDecrypt(packet, args, shake, ccmp, tkip, tgtMAC)
                         
                     ## Both ways To-DS
                     elif args.d == 'both' and packet[Dot11].addr1 == args.b.lower():
-                        toDecrypt(packet, args, shake, ccmp, ccmpBlah, tkip, tkipBlah, tgtMAC)
+                        toDecrypt(packet, args, shake, ccmp, tkip, tgtMAC)
 
                     # From-DS
                     elif args.d == 'from' and packet[Dot11].addr2 == args.b.lower():
-                        fromDecrypt(packet, args, shake, ccmp, ccmpBlah, tkip, tkipBlah, tgtMAC)
+                        fromDecrypt(packet, args, shake, ccmp, tkip, tgtMAC)
 
                     # To-DS
                     elif args.d == 'to' and packet[Dot11].addr1 == args.b.lower():
-                        toDecrypt(packet, args, shake, ccmp, ccmpBlah, tkip, tkipBlah, tgtMAC)
+                        toDecrypt(packet, args, shake, ccmp, tkip, tgtMAC)
                 else:
                     pass
             else:
@@ -182,11 +151,9 @@ def main(args):
             print 'wpa requires -e'
             sys.exit(1)
         ccmp = Ccmp()
-        ccmpBlah = ccmpSomething()
         tkip = Tkip()
-        tkipBlah = tkipSomething()
         shake = Handshake(args.p, args.e)
-        packetParser = wpaParser(args, shake, ccmp, ccmpBlah, tkip, tkipBlah)
+        packetParser = wpaParser(args, shake, ccmp, tkip)
 
     print 'pyDot11 up and running on tap{0}'.format(args.n)
     
@@ -266,11 +233,6 @@ if __name__ == '__main__':
                         metavar = '<Encryption type>',
                         required = True,
                         help = 'Encryption type ------------------- required')
-    ## DEBUG
-    #parser.add_argument('-v',
-                        #action = 'store_true',
-                        #help = 'Verbose timing statistics ----[Default: off]')
-
     args = parser.parse_args()
     
     ## Paths and imports
