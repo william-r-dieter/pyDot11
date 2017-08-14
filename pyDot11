@@ -156,47 +156,32 @@ def main(args):
         packetParser = wpaParser(args, shake, ccmp, tkip)
 
     print 'pyDot11 up and running on tap{0}'.format(args.n)
-    
+
     ## Default direction of To-DS
     if not args.d or args.d == 'to':
         if not args.d:
             args.d = 'to'
         if args.t == 'wpa':
-            sniff(iface = args.i,
-                prn = packetParser,
-                lfilter = lambda x: x[Dot11].FCfield == 65L or x.haslayer(EAPOL),
-                store = 0)
+            lfilter = lambda x: x[Dot11].FCfield == 65L or x.haslayer(EAPOL)
         else:
-            sniff(iface = args.i,
-                            prn = packetParser,
-                            lfilter = lambda x: x[Dot11].FCfield == 65L,
-                            store = 0)
+            lfilter = lambda x: x[Dot11].FCfield == 65L
 
     ## Deal with 2-way
     elif args.d == 'both':
         if args.t == 'wpa':
-            sniff(iface = args.i,
-                prn = packetParser,
-                lfilter = lambda x: x[Dot11].FCfield == 65L or x[Dot11].FCfield == 66L or x.haslayer(EAPOL),
-                store = 0)
+            lfilter = lambda x: x[Dot11].FCfield == 65L or x[Dot11].FCfield == 66L or x.haslayer(EAPOL)
         else:
-            sniff(iface = args.i,
-                prn = packetParser,
-                lfilter = lambda x: x[Dot11].FCfield == 65L or x[Dot11].FCfield == 66L,
-                store = 0)
+            lfilter = lambda x: x[Dot11].FCfield == 65L or x[Dot11].FCfield == 66L
 
     ## Deal with From-DS
     elif args.d == 'from':
         if args.t == 'wpa':
-            sniff(iface = args.i,
-                prn = packetParser,
-                lfilter = lambda x: x[Dot11].FCfield == 66L or x.haslayer(EAPOL),
-                store = 0)
+            lfilter = lambda x: x[Dot11].FCfield == 66L or x.haslayer(EAPOL)
         else:
-            sniff(iface = args.i,
-                            prn = packetParser,
-                            lfilter = lambda x: x[Dot11].FCfield == 66L,
-                            store = 0)
+            lfilter = lambda x: x[Dot11].FCfield == 66L
+
+    sniff(iface = args.i, prn = packetParser, lfilter = lfiter, store = 0)
+
 
 
 if __name__ == '__main__':
