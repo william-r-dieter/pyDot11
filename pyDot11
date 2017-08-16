@@ -1,6 +1,7 @@
 #!/usr/bin/python2.7
 
 import argparse, os, subprocess, sys
+import scapy.utils
 from scapy.sendrecv import sniff
 from scapy.layers.inet import IP
 from scapy.sendrecv import sendp, sniff
@@ -51,7 +52,7 @@ def toDecrypt(packet, args, *cryptoList):
                     type = 0x800)/decodedPkt[IP],
         iface = 'tap{0}'.format(args.n),
         verbose = 0)
-        
+
 
 def pktFilter(packet):
     """ Verify it is an encrypted data packet"""
@@ -68,11 +69,11 @@ def wepParser(args):
 
         ## Verify we care
         if pktFilter(packet):
-            
+
             ## Both ways From-DS
             if args.d == 'both' and packet[Dot11].addr2 == args.b.lower():
                 fromDecrypt(packet, args)
-                
+
             ## Both ways To-DS
             elif args.d == 'both' and packet[Dot11].addr1 == args.b.lower():
                 toDecrypt(packet, args)
@@ -94,14 +95,14 @@ def wpaParser(args, shake, ccmp, tkip):
         try:
             if packet.haslayer(EAPOL):
                 shake.eapolGrab(packet)
-                
+
             ## Verify we care
             elif pktFilter(packet):
                 tgtMAC = False
-                
+
                 ## DEBUG
                 #print shake.availTgts
-                
+
                 ## MAC verification
                 if packet.addr1 in shake.availTgts:
                     tgtMAC = packet.addr1
@@ -116,7 +117,7 @@ def wpaParser(args, shake, ccmp, tkip):
                     ## Both ways From-DS
                     if args.d == 'both' and packet[Dot11].addr2 == args.b.lower():
                         fromDecrypt(packet, args, shake, ccmp, tkip, tgtMAC)
-                        
+
                     ## Both ways To-DS
                     elif args.d == 'both' and packet[Dot11].addr1 == args.b.lower():
                         toDecrypt(packet, args, shake, ccmp, tkip, tgtMAC)
@@ -139,14 +140,15 @@ def wpaParser(args, shake, ccmp, tkip):
 
 def main(args):
 
-    ## Setup the tap
-    if not args.n:
-        dev = Tap()
-        subprocess.check_call('ifconfig tap0 up'.format(args.n), shell = True)
-        args.n = 0
-    else:
-        dev = Tap(args.n)
-        subprocess.check_call('ifconfig tap{0} up'.format(args.n), shell = True)
+    if args.i:
+        ## Setup the tap
+        if not args.n:
+            dev = Tap()
+            subprocess.check_call('ifconfig tap0 up'.format(args.n), shell = True)
+            args.n = 0
+        else:
+            dev = Tap(args.n)
+            subprocess.check_call('ifconfig tap{0} up'.format(args.n), shell = True)
 
     ## Setup the encryption
     if args.t == 'wep':
@@ -185,8 +187,20 @@ def main(args):
         else:
             lfilter = lambda x: x[Dot11].FCfield == 66L
 
-    sniff(iface = args.i, prn = packetParser, lfilter = lfiter, store = 0)
-
+    if args.i:
+        sniff(iface = args.i, prn = packetParser, lfilter = lfiter, store = 0)
+    elif args.f:
+        if os.access(args.f, os.R_OK):
+            capture = scapy.utils.PcapReader(args.f)
+            for pkt in capture:
+                packetParser(pkt)
+        else:
+            sys.stderr.write("{}: Cannot open input file: {}; skipping\n"
+                             .format(sys.argv[0], pcap_file))
+    else:
+        # argparse should never allow this to happen
+        sys.stderr.write("{}: must specify either -f or -i option\n"
+                         .format(sys.argv[0]))
 
 
 if __name__ == '__main__':
@@ -203,10 +217,13 @@ if __name__ == '__main__':
     parser.add_argument('-e',
                         metavar = '<tgt ESSID>',
                         help = 'Target ESSID -------------- required for wpa')
-    parser.add_argument('-i',
-                        metavar = '<Sniffing NIC>',
-                        required = True,
-                        help = 'NIC to sniff with ----------------- required')
+    input_args = parser.add_mutually_exclusive_group(required=True)
+    input_args.add_argument('-i',
+                            metavar = '<Sniffing NIC>',
+                            help = 'NIC to sniff with')
+    input_args.add_argument('-f',
+                            metavar = '<PCAP File>',
+                            help = 'File from which to get packets')
     parser.add_argument('-n',
                         metavar = '<dev number>',
                         help = 'Device number for Tap interface [Default: 0]')
