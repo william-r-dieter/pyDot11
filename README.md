@@ -16,7 +16,7 @@ There are some conflicts using scapy-2.3.3.  For now, until those issues are wor
 In the RESOURCEs folder you will find the python modules which have been tested.  As newver versions of the modules come out, sufficient testing must be done before they can be made known as "stable" with pyDot11.  Feel free to use pip or whatever method you would like to get these installed.  If you wish to use the modules locally provided with this git, then an installation would be something like so:
 ````bash
 pip install RESOURCEs/pbkdf2-1.3.tar.gz
-pip install RESOURCEs/pyDot11-1.0.6.tar.gz
+pip install RESOURCEs/pyDot11-1.0.8.tar.gz
 pip install RESOURCEs/pycryptodomex-3.4.5.tar.gz
 pip install RESOURCEs/rc4-0.1.tar.gz
 pip install RESOURCEs/scapy_2.2.0.orig.tar.gz
@@ -46,7 +46,7 @@ WPA Example: pypy pyDot11 -i wlan0mon -p <password> -b <tgt BSSID> -t wpa -e <tg
 python scripts/airpunt --help
 ````
 ### Various examples of other things you can do with pyDot11:
-<strong>We can <a href="https://github.com/ICSec/airpwn-ng"airpwn-ng>airpwn-ng!</href></strong>
+<strong>We can <a href="https://github.com/ICSec/airpwn-ng">airpwn-ng!</href></strong>
 ````python
 ## Example of grabbing an encrypted packet, decrypting it, and then replaying it:
 from pyDot11 import *
