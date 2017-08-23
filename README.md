@@ -74,7 +74,10 @@ encPkt.summary()
 ````
 
 ````python
-## Example of decrypting a pcap file:
+## Example of decrypting a WEP pcap file:
 from pyDot11 import *
-decList = pcap.crypt2plain('PCAPs/ICMPs/wep_pings.pcap', '0123456789')
+decList = pcap.crypt2plain('PCAPs/ICMPs/wep_pings.pcap', 'WEP', '0123456789')
+decPcap = PcapWriter('decrypted_pings.pcap', sync = True)
+for i in decList:
+    decPcap.write(i)
 ````
