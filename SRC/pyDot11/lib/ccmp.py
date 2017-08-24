@@ -230,10 +230,7 @@ class Ccmp(object):
         decodedPkt = postPkt/LLC(str(stream))
 
         ## Flip FCField bits accordingly
-        if decodedPkt[Dot11].FCfield == 65L:
-            decodedPkt[Dot11].FCfield = 1L
-        elif decodedPkt[Dot11].FCfield == 66L:
-            decodedPkt[Dot11].FCfield = 2L
+        decodedPkt[Dot11].FCfield = decodedPkt.FCfield & ~0x40
 
         ## Return the decoded packet with or without FCS
         if genFCS is False:
@@ -339,7 +336,7 @@ class Ccmp(object):
         pload1 = bytearray(pload[offset:])
         self.xorRange(pload1, MIC, pload1, 8)
         encrypted = ccmphdr + encrypted + pload1
-        
+
         del pkt[LLC]
         finalPkt = pkt/Raw(encrypted)
 

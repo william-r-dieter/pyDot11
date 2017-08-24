@@ -322,18 +322,15 @@ class Tkip(object):
 
         ## The data is proper in here
         finalPkt = postPkt.copy()/LLC(binascii.unhexlify(dEverything.replace(' ', '')))
-       
+
         ## Flip FCField bits accordingly
-        if finalPkt[Dot11].FCfield == 65L:
-            finalPkt[Dot11].FCfield = 1L
-        elif finalPkt[Dot11].FCfield == 66L:
-            finalPkt[Dot11].FCfield = 2L
+        decodedPkt[Dot11].FCfield = decodedPkt.FCfield & ~0x40
 
         ## Calculate and append the FCS
         crcle = crc32(str(finalPkt[Dot11])) & 0xffffffff
 
         if sys.byteorder == "little":
-            
+
             ## Convert to big endian
             crc = struct.pack('<L', crcle)
             ## Convert to long
