@@ -24,7 +24,7 @@ class Ccmp(object):
         return pkt[Dot11].FCfield & 0x4 > 0
 
     def order(self, pkt):
-        return pkt[Dot11].FCfield & 0x128 > 0
+        return pkt[Dot11].FCfield & 0x80 > 0
 
     def fragNum(self, pkt):
         if sys.byteorder == 'little':
