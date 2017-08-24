@@ -75,12 +75,9 @@ def wpaEncrypt(encKey, origPkt, decodedPkt, PN, genFCS = True):
     newPkt = newPkt/dEverything
     encodedPkt = ccmpCrypto.encryptCCMP(newPkt, encKey, PN, genFCS)
 
-    ## Flip FCField bits accordingly
-    if encodedPkt[Dot11].FCfield == 1L:
-        encodedPkt[Dot11].FCfield = 65L
-    elif encodedPkt[Dot11].FCfield == 2L:
-        encodedPkt[Dot11].FCfield = 66L
-    
+    ## Set 'protected' bit in FCfield
+    encodedPkt[Dot11].FCfield = finalPkt[Dot11].FCfield | 0x40
+
     return encodedPkt
 
 ### Instantiations

@@ -52,12 +52,9 @@ class Wep(object):
 
         ## Add the stream to LLC
         decodedPkt = postPkt/LLC(str(stream))
-        
+
         ## Flip FCField bits accordingly
-        if decodedPkt[Dot11].FCfield == 65L:
-            decodedPkt[Dot11].FCfield = 1L
-        elif decodedPkt[Dot11].FCfield == 66L:
-            decodedPkt[Dot11].FCfield = 2L
+        decodedPkt[Dot11].FCfield = decodedPkt.FCfield & ~0x40
 
         ## Return the decoded packet with or without FCS
         if genFCS is False:
@@ -103,10 +100,7 @@ class Wep(object):
         encodedPacket = pkt/Dot11WEP(iv = iVal, keyid = 0, wepdata = stream)
 
         ## Flip FCField bits accordingly
-        if encodedPacket[Dot11].FCfield == 1L:
-            encodedPacket[Dot11].FCfield = 65L
-        elif encodedPacket[Dot11].FCfield == 2L:
-            encodedPacket[Dot11].FCfield = 66L
+        decodedPkt[Dot11].FCfield = decodedPkt.FCfield | 0x40
 
         ## Add the ICV
         #encodedPacket[Dot11WEP].icv = int(self.pt.endSwap(hex(crc32(str(encodedPacket[Dot11])[0:-4]) & 0xffffffff)), 16)
