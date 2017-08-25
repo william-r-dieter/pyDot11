@@ -63,7 +63,8 @@ class Wep(object):
         if genFCS is False:
             return decodedPkt
         else:
-            return decodedPkt/Padding(load = binascii.unhexlify(self.pt.endSwap(hex(crc32(str(decodedPkt[Dot11])) & 0xffffffff)).replace('0x', '')))
+            fcs = struct.pack('<I', crc32(str(decodedPkt[Dot11])) & 0xffffffff)
+            return decodedPkt/Padding(load = fcs)
 
 
     def decoder(self, pkt, keyText):
@@ -71,25 +72,25 @@ class Wep(object):
         ## Re-use the IV for comparative purposes
         iVal = pkt[Dot11WEP].iv
         seed = self.seedGen(iVal, keyText)
-        
+
         ## Remove the FCS so that we maintain packet size
         pload = self.pt.byteRip(pkt[Dot11WEP],
                                 order = 'last',
                                 qty = 4,
                                 chop = True,
                                 output = 'str')
-        
+
         ## Return the stream, iv and seed
         return rc4(Dot11WEP(pload).wepdata, seed), iVal, seed
 
 
     def encoder(self, pkt, iVal, keyText):
         ## Calculate the WEP Integrity Check Value (ICV)
-        wepICV = self.pt.endSwap(hex(crc32(str(pkt[LLC])) & 0xffffffff))
-        
+        wepICV = struct.pack('<I', crc32(str(pkt[LLC])) & 0xffffffff)
+
         ## Concatenate ICV to the [LLC]
-        stream = str(pkt[LLC]) + binascii.unhexlify(wepICV.replace('0x', ''))
-        
+        stream = str(pkt[LLC]) + wepICV
+
         ## Return the encrypted data
         return rc4(stream, self.seedGen(iVal, keyText))
 
@@ -110,5 +111,5 @@ class Wep(object):
 
         ## Add the ICV
         #encodedPacket[Dot11WEP].icv = int(self.pt.endSwap(hex(crc32(str(encodedPacket[Dot11])[0:-4]) & 0xffffffff)), 16)
-        encodedPacket[Dot11WEP].icv = int(self.pt.fcsGen(encodedPacket[Dot11], end = -4), 16)
+        encodedPacket[Dot11WEP].icv = self.pt.fcsGen(encodedPacket[Dot11], end = -4, output = 'int')
         return encodedPacket

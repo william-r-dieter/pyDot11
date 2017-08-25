@@ -239,7 +239,7 @@ class Ccmp(object):
         if genFCS is False:
             return decodedPkt
         else:
-            return decodedPkt/Padding(load = binascii.unhexlify(self.pt.endSwap(hex(crc32(str(decodedPkt[Dot11])) & 0xffffffff)).replace('0x', '')))
+            return decodedPkt/Padding(load = struct.pack('<I', crc32(str(decodedPkt[Dot11])) & 0xffffffff))
 
 
     def encryptCCMP(self, pkt, aesKey, PN, genFCS):
@@ -345,6 +345,6 @@ class Ccmp(object):
 
         ## Return the encrypted packet with or without FCS
         if genFCS is True:
-            return finalPkt/Raw(binascii.unhexlify(self.pt.endSwap(hex(crc32(str(finalPkt[Dot11])) & 0xffffffff)).replace('0x', '')))
+            return finalPkt/Raw(struct.pack('<I', crc32(str(finalPkt[Dot11])) & 0xffffffff))
         else:
             return finalPkt
