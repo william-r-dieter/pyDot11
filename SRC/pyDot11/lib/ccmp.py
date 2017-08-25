@@ -125,15 +125,15 @@ class Ccmp(object):
 
         AAD[2] = dot11.proto | (dot11.type << 2) | ((dot11.subtype << 4) & 0x80)
         AAD[3] = 0x40 | self.toDS(origPkt) | (self.fromDS(origPkt) << 1) | (self.moreFrag(origPkt) << 2) | (self.order(origPkt) << 7)
-        self.bcopy(bytearray(re.sub(':','', dot11.addr1).decode("hex")), AAD, 0, 4)
-        self.bcopy(bytearray(re.sub(':','', dot11.addr2).decode("hex")), AAD, 0, 10)
-        self.bcopy(bytearray(re.sub(':','', dot11.addr3).decode("hex")), AAD, 0, 16)
+        self.bcopy(bytearray(dot11.addr1.replace(':', '').decode("hex")), AAD, 0, 4)
+        self.bcopy(bytearray(dot11.addr2.replace(':', '').decode("hex")), AAD, 0, 10)
+        self.bcopy(bytearray(dot11.addr3.replace(':', '').decode("hex")), AAD, 0, 16)
 
         AAD[22] = self.fragNum(origPkt)
         AAD[23] = 0
 
         if self.fromDS(origPkt) and self.toDS(origPkt):
-            self.bcopy(bytearray(re.sub(':','', dot11.addr4).decode("hex")), AAD, 0, 24)
+            self.bcopy(bytearray(dot11.addr4.replace(':', '').decode("hex")), AAD, 0, 24)
 
         ## DEBUG
         #print "".join("{:02x} ".format(e) for e in AAD)
@@ -150,12 +150,12 @@ class Ccmp(object):
         counter = bytearray(16)
         counter[0] = 0x59
         counter[1] = 0
-        
-        self.bcopy(bytearray(re.sub(':','', dot11.addr2).decode("hex")), counter, 0, 2)
+
+        self.bcopy(bytearray(dot11.addr2.replace(':', '').decode("hex")), counter, 0, 2)
         self.bcopy(PN, counter, 0, 8)
         counter[14] = (total_sz >> 8) & 0xff
         counter[15] = total_sz & 0xff
-        
+
         ## DEBUG
         #print "".join("{:02x} ".format(e) for e in counter)
 
