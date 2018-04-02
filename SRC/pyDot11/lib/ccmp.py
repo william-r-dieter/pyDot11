@@ -98,7 +98,7 @@ class Ccmp(object):
         """
 
         ## Remove the FCS so that we maintain packet size
-        pload = self.pt.byteRip(origPkt[Dot11WEP],
+        pload = self.pt.byteRip(origPkt[Raw],
                                 order = 'last',
                                 qty = 4,
                                 chop = True,
@@ -224,7 +224,7 @@ class Ccmp(object):
             postPkt = RadioTap()/postPkt[RadioTap].payload
         
         ## Rip off the Dot11WEP layer
-        del postPkt[Dot11WEP]
+        del postPkt[Raw]
 
         ## Add the stream to LLC
         decodedPkt = postPkt/LLC(str(stream))
